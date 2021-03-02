@@ -197,7 +197,7 @@ class Piece:
             piece_obj = board[row_index][col_index]
             if piece_obj is None:
                 valid_moves.append(coord)           # valid if empty
-            elif piece_obj.get_color() != self._game.get_turn():
+            elif piece_obj.get_color() != self.get_color():
                 valid_moves.append(coord)           # valid if opposite player color
         return valid_moves
 
@@ -247,7 +247,10 @@ class Guard(Piece):
 
 
 class General(Piece):
-    """inherits from the piece superclass"""
+    """
+    inherits from the piece superclass
+    can move orthagonally or diagonally one square within the fortress
+    """
     def __init__(self, game_class, color):
         super().__init__(game_class, color)
         self._name = color + "Gn"
@@ -258,79 +261,44 @@ class General(Piece):
 
     def get_valid_moves(self):
         """
-
-        :return:
+        returns a list of valid moves for the General based on the current position,
+        uses helper functions remove_same_color and invert_coordinates
+        (for cases of red or blue pieces)
         """
         # initialize to blue fortress
+        fortress = [(7, 3), (8, 3), (9, 3), (7, 4), (8, 4), (9, 4), (7, 5), (8, 5), (9, 5)]
+        fort_corners = [(7, 3), (7, 5), (9, 3), (9, 5)]
         fort_center = [(8, 4)]
-        fort_outer = [(7, 3), (8, 3), (9, 3), (7, 4), (9, 4), (7, 5), (8, 5), (9, 5)]
-        left_inner_corner = [(7, 3)]
-        right_inner_corner = [(7, 5)]
-        left_outer_corner = [(9, 3)]
-        right_outer_corner = [(9, 5)]
-        fort_midpoints = [(7, 4), (8, 3), (8, 5), (9, 4)]
-        vertical_midpoint = 4   # unchanged whether blue or red
-        horizontal_midpoint = 8
-
-        # if general is red, invert fortress to red
         if self.get_color() == "r":
+            invert_coordinates(fortress)
+            invert_coordinates(fort_corners)
             invert_coordinates(fort_center)
-            invert_coordinates(fort_outer)
-            invert_coordinates(left_inner_corner)
-            invert_coordinates(right_inner_corner)
-            invert_coordinates(left_outer_corner)
-            invert_coordinates(right_outer_corner)
-            invert_coordinates(fort_midpoints)
-            horizontal_midpoint = 9 - 8     # invert manually
 
         gen_moves = list()
         algebraic_pos = self.get_position()
-        numeric_pos = algebraic_to_numeric(algebraic_pos)
+        gen_pos = algebraic_to_numeric(algebraic_pos)
+        row_index, col_index = gen_pos
+        # all positions in the fortress can move up/down or left/right (within the fortress)
+        if gen_pos in fortress:
+            gen_moves.append((row_index+1, col_index))      # down
+            gen_moves.append((row_index-1, col_index))      # up
+            gen_moves.append((row_index, col_index+1))      # right
+            gen_moves.append((row_index, col_index-1))      # left
+        # if the general is in the center or corner, can also move diagonally
+        if gen_pos in fort_corners or gen_pos in fort_center:
+            gen_moves.append((row_index+1, col_index+1))    # diag down/right
+            gen_moves.append((row_index+1, col_index-1))    # diag down/left
+            gen_moves.append((row_index-1, col_index+1))    # diag up/right
+            gen_moves.append((row_index-1, col_index-1))    # diag up/left
 
-        # CENTER/OUTER MOVEMENT
-        # if pos is center fortress, all outer squares are valid moves
-        if numeric_pos in fort_center:
-            for pos in fort_outer:
-                gen_moves.append(pos)
-        # if pos is in outer squares, center fortress is valid move
-        if numeric_pos in fort_outer:
-            gen_moves.append(fort_center[0])
-
-        # MIDPOINT MOVEMENT
-        row_index, col_index = numeric_pos      # unpack tuple
-        if numeric_pos not in fort_center:
-            # if vertical midpoint of fortress, can move left or right
-            if col_index == vertical_midpoint:
-                gen_moves.append((row_index, col_index+1))
-                gen_moves.append((row_index, col_index-1))
-            # if horizontal midpoint of fortress (blue or red), can move up or down
-            if row_index == horizontal_midpoint:
-                gen_moves.append((row_index+1, col_index))
-                gen_moves.append((row_index-1, col_index))
-
-        # CORNER MOVEMENT
-        # if left inner corner, row+1 or col+1 are valid
-        if numeric_pos in left_inner_corner:
-            gen_moves.append((row_index+1, col_index))
-            gen_moves.append((row_index, col_index+1))
-        # if right inner corner, row+1 or col-1 are valid
-        if numeric_pos in right_inner_corner:
-            gen_moves.append((row_index+1, col_index))
-            gen_moves.append((row_index, col_index-1))
-        # if left outer corner, row-1 or col+1 are valid
-        if numeric_pos in left_outer_corner:
-            gen_moves.append((row_index-1, col_index))
-            gen_moves.append((row_index, col_index+1))
-        # if right outer corner, row-1 or col-1 are valid
-        if numeric_pos in right_outer_corner:
-            gen_moves.append((row_index-1, col_index))
-            gen_moves.append((row_index, col_index-1))
-
-        # don't include any moves that are off the board
-        in_bounds_moves = self.remove_out_of_bounds(gen_moves)
+        # at this point: a lot of extra moves are in gen_moves
+        # that aren't confined to the fortress, remove these
+        fortress_moves = list()
+        for coord in gen_moves:
+            if coord in fortress:
+                fortress_moves.append(coord)  # only add coordinates that are in the fortress
         # don't include any moves that have a piece with the same color as the current turn (blocked)
-        all_valid_moves = self.remove_same_color(in_bounds_moves)
-
+        all_valid_moves = self.remove_same_color(fortress_moves)
         return all_valid_moves
 
 
@@ -361,8 +329,8 @@ class Soldier(Piece):
 
     def get_valid_moves(self):
         """
-        returns a list of valid moves based on the current position,
-        uses helper functions remove_out_of_bounds and invert_coordinates
+        returns a list of valid moves for the Soldier based on the current position,
+        uses helper functions remove_out_of_bounds, remove_same_color, and invert_coordinates
         (for cases of red or blue pieces)
         """
         algebraic_pos = self.get_position()
@@ -480,6 +448,10 @@ def main():
     game = JanggiGame()
     # game.play_game()
     game.display_board()
+    game.make_move("e9", "d9")
+    game.display_board()
+    blue_gen = game.get_square_contents("d9")
+    print(blue_gen.get_valid_moves())
 
 
 if __name__ == "__main__":
