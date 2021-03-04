@@ -3,7 +3,7 @@
 # Description:
 
 import unittest
-from JanggiGame import JanggiGame, algebraic_to_numeric, numeric_to_algebraic
+from JanggiGame import JanggiGame, Soldier, Chariot, algebraic_to_numeric, numeric_to_algebraic
 
 
 class UnitTests(unittest.TestCase):
@@ -13,18 +13,28 @@ class UnitTests(unittest.TestCase):
     def test_algebraic_to_numeric(self):
         alg1 = "a1"
         alg2 = "e5"
+        alg3 = "d10"
         self.assertEqual((0, 0), algebraic_to_numeric(alg1))
         self.assertEqual((4, 4), algebraic_to_numeric(alg2))
+        self.assertEqual((9, 3), algebraic_to_numeric(alg3))
 
     def test_numeric_to_algebraic(self):
         num1 = (0, 0)
         num2 = (4, 4)
+        num3 = (9, 3)
         self.assertEqual("a1", numeric_to_algebraic(num1))
         self.assertEqual("e5", numeric_to_algebraic(num2))
+        self.assertEqual("d10", numeric_to_algebraic(num3))
 
     def test_get_square_contents(self):
         board = self.game.get_board()
         self.assertEqual(board[0][0], self.game.get_square_contents("a1"))
+
+    def test_set_square_contents(self):
+        # assign a new red soldier to an empty square
+        new_sold = Soldier(self.game, "r")
+        self.game.set_square_contents("d9", new_sold)
+        self.assertEqual(new_sold, self.game.get_square_contents("d9"))
 
     def test_solider_blocked_by_same_color(self):
         # blue soldier at b7 can't move to c7 (occupied by another blue soldier)
@@ -45,30 +55,23 @@ class UnitTests(unittest.TestCase):
         red_moves = [(4, 0), (3, 1)]
         self.assertEqual(red_moves, a4_r_sold.get_valid_moves())
 
-    def test_soldier_diagonal_fortress(self):
-        # move blue soldier from C7 to D3 (red fortress inner corner)
-        self.game.make_move("c7", "d7")
-        self.game.set_turn("b")
-        self.game.make_move("d7", "d6")
-        self.game.set_turn("b")
-        self.game.make_move("d6", "d5")
-        self.game.set_turn("b")
-        self.game.make_move("d5", "d4")
-        self.game.set_turn("b")
-        self.game.make_move("d4", "d3")
-        self.game.set_turn("b")
-        d3_b_sold = self.game.get_square_contents("d3")
+    def test_soldier_diagonal_fortress_center(self):
+        # make blue soldier at red fortress inner corner
+        b_sold = Soldier(self.game, "b")
+        self.game.set_square_contents("d3", b_sold)
+        b_sold.set_position("d3")
         # check move diagonal to red fortress center is valid
-        self.assertIn((1, 4), d3_b_sold.get_valid_moves())
+        self.assertIn((1, 4), b_sold.get_valid_moves())
 
-        # move the same blue solider into red fortress center
-        self.game.make_move("d3", "e2")
-        self.game.set_turn("b")
-        e2_b_sold = self.game.get_square_contents("e2")
+    def test_soldier_diagonal_fortress_corner(self):
+        # make blue soldier at red fortress center
+        b_sold = Soldier(self.game, "b")
+        self.game.set_square_contents("e2", b_sold)
+        b_sold.set_position("e2")
         # check moves diagonal to red fortress outer corners are valid
         outer_corners = [(0, 3), (0, 5)]
-        self.assertIn(outer_corners[0], e2_b_sold.get_valid_moves())
-        self.assertIn(outer_corners[1], e2_b_sold.get_valid_moves())
+        self.assertIn(outer_corners[0], b_sold.get_valid_moves())
+        self.assertIn(outer_corners[1], b_sold.get_valid_moves())
 
     def test_soldier_capture(self):
         self.game.make_move("a7", "a6")     # bSd to A6
@@ -77,7 +80,7 @@ class UnitTests(unittest.TestCase):
         a5_sd = self.game.get_square_contents("a5")
         self.assertEqual("b", a5_sd.get_color())
 
-    def test_general_moves(self):
+    def test_blue_general_moves(self):
         # blue center to outer
         self.assertTrue(self.game.make_move("e9", "d8"))
         self.game.make_move("e9", "d8")
@@ -88,3 +91,45 @@ class UnitTests(unittest.TestCase):
         self.game.set_turn("b")
         # blue center to guard position (same color, blocked)
         self.assertFalse(self.game.make_move("e9", "d10"))
+
+    def test_red_general_moves(self):
+        # diagonal fortress move
+        self.game.set_turn("r")
+        self.assertTrue(self.game.make_move("e2", "d3"))
+
+    def test_general_pass_valid(self):
+        self.assertTrue(self.game.make_move("e2", "e2"))
+
+    def test_guard_moves(self):
+        # blue guard to d9
+        self.game.make_move("d10", "d9")
+        self.game.set_turn("b")
+        # blue guard tries to leave fortress, False
+        self.assertFalse(self.game.make_move("d9", "c9"))
+        self.game.set_turn("b")
+        # blue guard tries to occupy General's piece
+        self.assertFalse(self.game.make_move("d9", "e9"))
+        self.game.set_turn("b")
+
+    def test_guard_capture(self):
+        # blue guard captures enemy soldier
+        red_sold = Soldier(self.game, "r")                  # make new red soldier
+        self.game.set_square_contents("d9", red_sold)       # move it to d9
+        red_sold.set_position("d9")
+        self.game.make_move("d10", "d9")                    # move guard to capture red soldier
+        d9_piece = self.game.get_square_contents("d9")      # get the piece at d9
+        self.assertEqual("bGd", d9_piece.get_name())        # test it is the blue guard (capture success)
+
+    def test_chariot_orthogonal_moves(self):
+        b_char = Chariot(self.game, "b")                    # make new blue chariot
+        self.game.set_square_contents("e6", b_char)         # move it to e6
+        b_char.set_position("e6")
+        valid_moves = [(5, 0), (5, 1), (5, 2), (5, 3), (5, 5), (5, 6), (5, 7), (5, 8), (4, 4), (3, 4)]
+        for move in b_char.get_valid_moves():
+            self.assertIn(move, valid_moves)
+
+    def test_chariot_diagonal_to_center(self):
+        b_char = Chariot(self.game, "b")  # make new blue chariot
+        self.game.set_square_contents("d3", b_char)  # move it to d3 (fortress corner)
+        b_char.set_position("d3")
+        self.assertTrue(self.game.make_move("d3", "e2"))
