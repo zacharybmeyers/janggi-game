@@ -3,7 +3,7 @@
 # Description:
 
 import unittest
-from JanggiGame import JanggiGame, Soldier, Chariot, algebraic_to_numeric, numeric_to_algebraic
+from JanggiGame import JanggiGame, Soldier, Chariot, Horse, algebraic_to_numeric, numeric_to_algebraic
 
 
 class UnitTests(unittest.TestCase):
@@ -125,11 +125,32 @@ class UnitTests(unittest.TestCase):
         self.game.set_square_contents("e6", b_char)         # move it to e6
         b_char.set_position("e6")
         valid_moves = [(5, 0), (5, 1), (5, 2), (5, 3), (5, 5), (5, 6), (5, 7), (5, 8), (4, 4), (3, 4)]
-        for move in b_char.get_valid_moves():
-            self.assertIn(move, valid_moves)
+        self.assertCountEqual(valid_moves, b_char.get_valid_moves())
 
     def test_chariot_diagonal_to_center(self):
-        b_char = Chariot(self.game, "b")  # make new blue chariot
-        self.game.set_square_contents("d3", b_char)  # move it to d3 (fortress corner)
+        b_char = Chariot(self.game, "b")                # make new blue chariot
+        self.game.set_square_contents("d3", b_char)     # move it to d3 (fortress corner)
         b_char.set_position("d3")
         self.assertTrue(self.game.make_move("d3", "e2"))
+
+    def test_chariot_diagonal_two_squares(self):
+        b_char = Chariot(self.game, "b")                # make new blue chariot
+        self.game.set_square_contents("d3", b_char)     # move it to d3 (fortress corner)
+        b_char.set_position("d3")
+        self.game.set_square_contents("e2", None)       # remove the general
+        self.assertTrue(self.game.make_move("d3", "f1"))
+
+    def test_horse_capture_move(self):
+        # blue horse at d4
+        b_horse = Horse(self.game, "b")
+        self.game.set_square_contents("d4", b_horse)
+        b_horse.set_position("d4")
+        self.assertIn((1, 4), b_horse.get_valid_moves())
+
+    def test_horse_orthogonal_in_bounds_diagonal_out_of_bounds(self):
+        b_horse = Horse(self.game, "b")
+        self.game.set_square_contents("c9", b_horse)    # create blue horse at c9
+        b_horse.set_position("c9")                      # set position
+        self.game.set_square_contents("c10", None)      # clear horse at c10
+        valid_moves = [(6, 1), (6, 3), (9, 4), (7, 4), (7, 0)]
+        self.assertCountEqual(valid_moves, b_horse.get_valid_moves())

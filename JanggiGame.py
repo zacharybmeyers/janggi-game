@@ -506,12 +506,66 @@ class Horse(Piece):
         """getter for name"""
         return self._name
 
+    def diagonal_moves(self, direction):
+        """
+        helper function returns a list of possible diagonal moves
+        based on the direction given
+        :param direction: either 'right', 'left', 'down', or 'up'
+        :returns: diagonal_moves
+        """
+        algebraic_pos = self.get_position()
+        numeric_pos = algebraic_to_numeric(algebraic_pos)
+        row_index, col_index = numeric_pos
+        board = self._game.get_board()
+
+        if direction == "right" or direction == "left":  # if horizontal direction
+            if direction == "right":
+                step = 1
+            if direction == "left":
+                step = -1
+            next_column = col_index + step  # move column index either right or left
+            next_row = row_index  # row index unchanged
+        if direction == "down" or direction == "up":  # if vertical direction
+            if direction == "down":
+                step = 1
+            if direction == "up":
+                step = -1
+            next_column = col_index  # column index unchanged
+            next_row = row_index + step  # move row index either down or up
+
+        diagonal_moves = list()
+        col_len = len(board)
+        row_len = len(board[0])
+
+        if 0 <= next_row < col_len and 0 <= next_column < row_len:  # if in bounds
+            ortho_square = (next_row, next_column)
+            ortho_square_alg = numeric_to_algebraic(ortho_square)
+            ortho_obj = self._game.get_square_contents(ortho_square_alg)
+            if ortho_obj is None:  # if orthogonal square is not blocked
+                # make list of 2 possible diagonals (depending on direction)
+                if direction == "up" or direction == "down":
+                    diagonals = [(next_row+step, next_column+1), (next_row+step, next_column-1)]
+                if direction == "right" or direction == "left":
+                    diagonals = [(next_row+1, next_column+step), (next_row-1, next_column+step)]
+                # iterate only through the diagonals that are on the game board
+                for diagonal in self.remove_out_of_bounds(diagonals):
+                    diagonal_alg = numeric_to_algebraic(diagonal)
+                    diagonal_obj = self._game.get_square_contents(diagonal_alg)
+                    if diagonal_obj is None or diagonal_obj.get_color() != self.get_color():  # if empty or enemy
+                        diagonal_moves.append(diagonal)  # add coordinate to valid moves
+        return diagonal_moves
+
     def get_valid_moves(self):
         """
         returns a list of valid moves for the Horse based on the current position,
-        uses helper functions remove_same_color for moves blocked by friendly pieces
+        uses helper function diagonal_moves()
         """
-        pass
+        horse_moves = list()
+        horse_moves.extend(self.diagonal_moves("up"))
+        horse_moves.extend(self.diagonal_moves("down"))
+        horse_moves.extend(self.diagonal_moves("right"))
+        horse_moves.extend(self.diagonal_moves("left"))
+        return horse_moves
 
 
 class Guard(Piece):
@@ -727,12 +781,12 @@ class Soldier(Piece):
 def main():
     game = JanggiGame()
     # game.play_game()
+    b_horse = Horse(game, "b")
+    game.set_square_contents("c9", b_horse)     # create blue horse at c9
+    b_horse.set_position("c9")                  # set position
+    game.set_square_contents("c10", None)       # clear horse at c10
     game.display_board()
-    b_sold = Soldier(game, "b")  # make new blue chariot
-    game.set_square_contents("d3", b_sold)  # move it to d3 (fortress corner)
-    b_sold.set_position("d3")
-    game.display_board()
-    print(b_sold.get_valid_moves())
+    print(b_horse.get_valid_moves())
 
 
 if __name__ == "__main__":
