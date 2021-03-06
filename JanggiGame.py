@@ -483,12 +483,79 @@ class Elephant(Piece):
         """getter for name"""
         return self._name
 
+    def elephant_diagonal_moves(self, direction):
+        """
+        helper function returns a list of possible diagonal moves 2 squares away
+        from the current position based on the direction given.
+        verifies the moves aren't blocked, and that they are on the game board with
+        the use of the remove_out_of_bounds() helper function.
+        :param direction: either 'right', 'left', 'down', or 'up'
+        :returns: diagonal_moves
+        """
+        algebraic_pos = self.get_position()
+        numeric_pos = algebraic_to_numeric(algebraic_pos)
+        row_index, col_index = numeric_pos
+        board = self._game.get_board()
+
+        if direction == "right" or direction == "left":  # if horizontal direction
+            if direction == "right":
+                step = 1
+            if direction == "left":
+                step = -1
+            next_column = col_index + step  # move column index either right or left
+            next_row = row_index  # row index unchanged
+        if direction == "down" or direction == "up":  # if vertical direction
+            if direction == "down":
+                step = 1
+            if direction == "up":
+                step = -1
+            next_column = col_index  # column index unchanged
+            next_row = row_index + step  # move row index either down or up
+
+        diagonal_moves = list()
+        col_len = len(board)
+        row_len = len(board[0])
+
+        if 0 <= next_row < col_len and 0 <= next_column < row_len:  # if in bounds
+            ortho_square = (next_row, next_column)
+            ortho_square_alg = numeric_to_algebraic(ortho_square)
+            ortho_obj = self._game.get_square_contents(ortho_square_alg)
+            if ortho_obj is None:  # if orthogonal square is not blocked
+                # make two lists for possible diagonals 1 square away and
+                # 2 squares away (depending on direction)
+                if direction == "up" or direction == "down":
+                    first_diagonals = [(next_row+step, next_column+1), (next_row+step, next_column-1)]
+                    second_diagonals = [(next_row+step+step, next_column+2), (next_row+step+step, next_column-2)]
+                if direction == "right" or direction == "left":
+                    first_diagonals = [(next_row+1, next_column+step), (next_row-1, next_column+step)]
+                    second_diagonals = [(next_row+2, next_column+step+step), (next_row-2, next_column+step+step)]
+                # iterate only through the first diagonals that are on the game board
+                for first_diag in self.remove_out_of_bounds(first_diagonals):
+                    first_diag_alg = numeric_to_algebraic(first_diag)
+                    first_diag_obj = self._game.get_square_contents(first_diag_alg)
+                    if first_diag_obj is None:  # if empty (clear)
+                        # iterate through second diagonals that are on the board
+                        for second_diag in self.remove_out_of_bounds(second_diagonals):
+                            second_diag_alg = numeric_to_algebraic(second_diag)
+                            second_diag_obj = self._game.get_square_contents(second_diag_alg)
+                            if second_diag_obj is None or second_diag_obj.get_color() != self.get_color():
+                                # if empty or enemy, add to valid moves
+                                diagonal_moves.append(second_diag)
+        # the nested call above will add duplicate valid moves to the list, remove these before returning
+        return list(set(diagonal_moves))
+
     def get_valid_moves(self):
         """
         returns a list of valid moves for the Elephant based on the current position,
-        uses helper functions remove_same_color for moves blocked by friendly pieces
+        uses helper function diagonal_moves() to get the valid moves that are 2 diagonal
+        squares away
         """
-        pass
+        elephant_moves = list()
+        elephant_moves.extend(self.elephant_diagonal_moves("up"))
+        elephant_moves.extend(self.elephant_diagonal_moves("down"))
+        elephant_moves.extend(self.elephant_diagonal_moves("right"))
+        elephant_moves.extend(self.elephant_diagonal_moves("left"))
+        return elephant_moves
 
 
 class Horse(Piece):
@@ -506,10 +573,12 @@ class Horse(Piece):
         """getter for name"""
         return self._name
 
-    def diagonal_moves(self, direction):
+    def horse_diagonal_moves(self, direction):
         """
-        helper function returns a list of possible diagonal moves
-        based on the direction given
+        helper function returns a list of possible diagonal moves 1 square away
+        based on the direction given.
+        verifies the moves aren't blocked, and that they are on the game board with
+        the use of the remove_out_of_bounds() helper function.
         :param direction: either 'right', 'left', 'down', or 'up'
         :returns: diagonal_moves
         """
@@ -558,13 +627,13 @@ class Horse(Piece):
     def get_valid_moves(self):
         """
         returns a list of valid moves for the Horse based on the current position,
-        uses helper function diagonal_moves()
+        uses helper function horse_diagonal_moves()
         """
         horse_moves = list()
-        horse_moves.extend(self.diagonal_moves("up"))
-        horse_moves.extend(self.diagonal_moves("down"))
-        horse_moves.extend(self.diagonal_moves("right"))
-        horse_moves.extend(self.diagonal_moves("left"))
+        horse_moves.extend(self.horse_diagonal_moves("up"))
+        horse_moves.extend(self.horse_diagonal_moves("down"))
+        horse_moves.extend(self.horse_diagonal_moves("right"))
+        horse_moves.extend(self.horse_diagonal_moves("left"))
         return horse_moves
 
 
@@ -781,12 +850,11 @@ class Soldier(Piece):
 def main():
     game = JanggiGame()
     # game.play_game()
-    b_horse = Horse(game, "b")
-    game.set_square_contents("c9", b_horse)     # create blue horse at c9
-    b_horse.set_position("c9")                  # set position
-    game.set_square_contents("c10", None)       # clear horse at c10
+    b_ele = Elephant(game, "b")
+    game.set_square_contents("e4", b_ele)
+    b_ele.set_position("e4")
     game.display_board()
-    print(b_horse.get_valid_moves())
+    print(b_ele.get_valid_moves())
 
 
 if __name__ == "__main__":
