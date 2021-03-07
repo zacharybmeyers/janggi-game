@@ -67,7 +67,7 @@ class JanggiGame:
         self._b_fort_center = [(8, 4)]
         self._board = [
             [Chariot(self, "r"), Elephant(self, "r"), Horse(self, "r"), Guard(self, "r"), None,
-             Guard(self, "r"), Horse(self, "r"), Elephant(self, "r"), Chariot(self, "r")],
+             Guard(self, "r"), Elephant(self, "r"), Horse(self, "r"), Chariot(self, "r")],
             [None, None, None, None, General(self, "r"), None, None, None, None],
             [None, Cannon(self, "r"), None, None, None, None, None, Cannon(self, "r"), None],
             [Soldier(self, "r"), None, Soldier(self, "r"), None, Soldier(self, "r"), None,
@@ -79,7 +79,7 @@ class JanggiGame:
             [None, Cannon(self, "b"), None, None, None, None, None, Cannon(self, "b"), None],
             [None, None, None, None, General(self, "b"), None, None, None, None],
             [Chariot(self, "b"), Elephant(self, "b"), Horse(self, "b"), Guard(self, "b"), None,
-             Guard(self, "b"), Horse(self, "b"), Elephant(self, "b"), Chariot(self, "b")],
+             Guard(self, "b"), Elephant(self, "b"), Horse(self, "b"), Chariot(self, "b")],
         ]
         # set starting positions for game pieces
         self.setup_board()
