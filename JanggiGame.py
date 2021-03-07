@@ -334,6 +334,21 @@ class Piece:
                 valid_moves.append(coord)           # valid if opposite player color
         return valid_moves
 
+    def on_game_board(self, tup_coord):
+        """
+        helper function takes a tuple coordinate and
+        returns true if it's on the game board, false otherwise
+        """
+        board = self._game.get_board()
+        row_len = len(board[0])
+        col_len = len(board)
+
+        row, col = tup_coord
+        if 0 <= col < row_len and 0 <= row < col_len:
+            return True
+        else:
+            return False
+
 
 class Chariot(Piece):
     """
@@ -775,12 +790,134 @@ class Cannon(Piece):
         """getter for name"""
         return self._name
 
+    def orthogonal_moves(self, direction):
+        """
+        helper function returns a list of possible orthogonal moves
+        based on the direction given
+        :param direction: either 'right', 'left', 'down', or 'up'
+        :returns: orthogonal_moves
+        """
+        algebraic_pos = self.get_position()
+        numeric_pos = algebraic_to_numeric(algebraic_pos)
+        row_index, col_index = numeric_pos
+
+        if direction == "right" or direction == "left":     # if horizontal direction
+            if direction == "right":
+                step = 1
+            if direction == "left":
+                step = -1
+            next_column = col_index + step                      # move column index either right or left
+            next_row = row_index                                # row index unchanged
+        if direction == "down" or direction == "up":        # if vertical direction
+            if direction == "down":
+                step = 1
+            if direction == "up":
+                step = -1
+            next_column = col_index                             # column index unchanged
+            next_row = row_index + step                         # move row index either down or up
+
+        orthogonal_moves = list()
+        board = self._game.get_board()
+        # get next piece
+        next_piece = board[next_row][next_column]
+
+        # while next square is empty and on game board, keep moving along straight line
+        while next_piece is None and self.on_game_board((next_row, next_column)):
+            if direction == "right" or direction == "left":  # move across board based on direction
+                next_column += step
+            elif direction == "down" or direction == "up":
+                next_row += step
+            next_piece = board[next_row][next_column]
+        # a piece has been found, or we're off the board
+        if self.on_game_board((next_row, next_column)):     # if still on game board...
+            if "Cn" not in next_piece.get_name():           # if not a cannon, can jump over!
+                if direction == "right" or direction == "left":  # move across board based on direction
+                    next_column += step
+                elif direction == "down" or direction == "up":
+                    next_row += step
+                # check for cases where we've found a valid jump but it's on the edge of the board
+                if self.on_game_board((next_row, next_column)):
+                    next_piece = board[next_row][next_column]
+                # while each next square is empty and on the board,
+                # keep moving along straight line AND ADD VALID MOVES
+                while next_piece is None and self.on_game_board((next_row, next_column)):
+                    orthogonal_moves.append((next_row, next_column))
+                    if direction == "right" or direction == "left":  # move across board based on direction
+                        next_column += step
+                    elif direction == "down" or direction == "up":
+                        next_row += step
+                    next_piece = board[next_row][next_column]
+                # a piece has been found, or we're off the board
+                if self.on_game_board((next_row, next_column)):     # if still on game board...
+                    # if not a cannon and an enemy piece, add to valid moves, end loop
+                    if "Cn" not in next_piece.get_name() and next_piece.get_color() != self.get_color():
+                        orthogonal_moves.append((next_row, next_column))
+        return orthogonal_moves
+
+    def fortress_moves(self):
+        """helper function returns a list of possible moves a Cannon can make in a fortress"""
+        algebraic_pos = self.get_position()
+        cannon_pos = algebraic_to_numeric(algebraic_pos)
+        row_index, col_index = cannon_pos
+
+        # initialize to blue fortress
+        blue_fortress = self._game.get_blue_fortress()
+        fortress = blue_fortress
+        fort_corners = self._game.get_blue_fortress_corners()
+        fort_center = self._game.get_blue_fortress_center()     # list with tuple coord of fort center
+
+        # if the cannon is not in the blue fortress, invert to red fortress coordinates
+        if cannon_pos not in blue_fortress:
+            invert_coordinates(fortress)
+            invert_coordinates(fort_corners)
+            invert_coordinates(fort_center)
+
+        # get the object in the fortress center (either a Piece or None)
+        fort_center_alg = numeric_to_algebraic(fort_center[0])
+        fort_center_obj = self._game.get_square_contents(fort_center_alg)
+
+        potential_moves = list()
+        # if cannon is in a corner, and the center is not empty and not a cannon,
+        # can potentially move two squares diagonally
+        # (this includes squares outside the fortress which are removed later)
+        if cannon_pos in fort_corners and fort_center_obj is not None:
+            if "Cn" not in fort_center_obj.get_name():
+                potential_moves.append((row_index + 2, col_index + 2))  # diagonal 2 down/right
+                potential_moves.append((row_index + 2, col_index - 2))  # diagonal 2 down/left
+                potential_moves.append((row_index - 2, col_index + 2))  # diagonal 2 up/right
+                potential_moves.append((row_index - 2, col_index - 2))  # diagonal 2 up/left
+
+        # remove any squares not in the fortress
+        fortress_moves = list()
+        for square in potential_moves:
+            if square in fortress:
+                fortress_moves.append(square)
+
+        valid_fortress_moves = list()
+        for square in fortress_moves:
+            # get object found at each square (either Piece or None)
+            square_alg = numeric_to_algebraic(square)
+            square_obj = self._game.get_square_contents(square_alg)
+            # if empty, valid move
+            if square_obj is None:
+                valid_fortress_moves.append(square)
+            # if not a cannon and an enemy, valid move
+            elif "Cn" not in square_obj.get_name() and square_obj.get_color() != self.get_color():
+                valid_fortress_moves.append(square)
+        return valid_fortress_moves
+
     def get_valid_moves(self):
         """
         returns a list of valid moves for the Cannon based on the current position,
-        uses helper functions remove_same_color for moves blocked by friendly pieces
+        uses helper function orthogonal_moves
         """
-        pass
+        cannon_moves = list()
+        cannon_moves.extend(self.orthogonal_moves("up"))
+        cannon_moves.extend(self.orthogonal_moves("down"))
+        cannon_moves.extend(self.orthogonal_moves("right"))
+        cannon_moves.extend(self.orthogonal_moves("left"))
+        cannon_moves.extend(self.fortress_moves())
+        return cannon_moves
 
 
 class Soldier(Piece):
@@ -850,11 +987,11 @@ class Soldier(Piece):
 def main():
     game = JanggiGame()
     # game.play_game()
-    b_ele = Elephant(game, "b")
-    game.set_square_contents("e4", b_ele)
-    b_ele.set_position("e4")
+    b_cannon = Cannon(game, "b")
+    game.set_square_contents("d3", b_cannon)
+    b_cannon.set_position("d3")
     game.display_board()
-    print(b_ele.get_valid_moves())
+    print(b_cannon.get_valid_moves())
 
 
 if __name__ == "__main__":
