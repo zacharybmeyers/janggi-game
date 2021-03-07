@@ -850,7 +850,8 @@ class Cannon(Piece):
                                 next_column += step
                             elif direction == "down" or direction == "up":
                                 next_row += step
-                            next_piece = board[next_row][next_column]
+                            if self.on_game_board((next_row, next_column)):
+                                next_piece = board[next_row][next_column]
                         # a piece has been found, or we're off the board
                         if self.on_game_board((next_row, next_column)):     # if still on game board...
                             # if not a cannon and an enemy piece, add to valid moves, end loop
@@ -992,8 +993,10 @@ def main():
     game = JanggiGame()
     # game.play_game()
     b_cannon = Cannon(game, "b")
-    game.set_square_contents("f4", b_cannon)
-    b_cannon.set_position("f4")
+    game.set_square_contents("b6", b_cannon)
+    b_cannon.set_position("b6")
+    game.make_move("c7", "c6")
+    game.set_turn("b")
     game.display_board()
     print(b_cannon.get_valid_moves())
 
