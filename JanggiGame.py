@@ -59,7 +59,6 @@ class JanggiGame:
     def __init__(self):
         """initializes private data members"""
         self._game_state = "UNFINISHED"
-        self._in_check = None
         self._turn = "b"
         # initialize blue fortress coordinates for use in each Piece subclass
         self._b_fortress = [(7, 3), (8, 3), (9, 3), (7, 4), (8, 4), (9, 4), (7, 5), (8, 5), (9, 5)]
@@ -114,26 +113,92 @@ class JanggiGame:
         """getter for blue fortress center"""
         return self._b_fort_center
 
-    def get_in_check(self):
-        """getter for in check"""
-        return self._in_check
+    def get_general(self, color):
+        """
+        helper function returns the General object found on the board
+        with a specified color
+        """
+        general_name = color + "Gn"
+        board = self.get_board()
+        # iterate through all pieces on the game board
+        for row in board:
+            for piece_obj in row:
+                # if not empty...
+                if piece_obj is not None:
+                    # if general, return general
+                    if general_name in piece_obj.get_name():
+                        return piece_obj
 
-    def set_in_check(self, color):
-        """setter for in check, where color is a string for red or blue"""
-        self._in_check = color
+    def all_player_moves(self, color):
+        """
+        helper function returns a large list of all the possible moves a player (color)
+        can make with their current set of pieces on the game board
+        """
+        all_valid_moves = list()
+        board = self.get_board()
+        # iterate through all pieces on the game board
+        for row in board:
+            for piece_obj in row:
+                # if not empty...
+                if piece_obj is not None:
+                    # if color
+                    if color in piece_obj.get_name():
+                        # get the valid moves and add them to the enemy list
+                        all_valid_moves.extend(piece_obj.get_valid_moves())
+        return all_valid_moves
 
     def is_in_check(self, color):
         """
         Takes a color for the player in question.
-        Uses get_valid_moves() on that player's General piece.
-        Uses all_potential_moves(), which just calls get_valid_moves()) on every
-        one of the opposite player's remaining pieces, to create a large list of all possible next moves.
-        If the valid moves of the player's General are all accounted for in the opposite
-        player's large list of all potential next moves, the player in question is in check.
-        Uses set_in_check to update self._in_check to either "b" or "r" accordingly.
-        Returns True if in check, False otherwise.
+        Call get_valid_moves()) on every one of the enemy player's remaining pieces,
+        to create a large list of all possible next moves.
+        If the friendly General's position is in this list of enemy_valid_moves (able to be captured),
+        they are in check, return True.
+        Otherwise, return False.
         """
-        pass
+        # initialize colors
+        if color == "blue":
+            friendly_color = "b"
+            enemy_color = "r"
+        elif color == "red":
+            friendly_color = "r"
+            enemy_color = "b"
+
+        # get all the enemy's valid moves
+        enemy_valid_moves = self.all_player_moves(enemy_color)
+        # get the friendly general
+        general_obj = self.get_general(friendly_color)
+        # get the general's position
+        alg_pos = general_obj.get_position()
+        general_pos = algebraic_to_numeric(alg_pos)
+        # if the general's position can be captured by the opposite player
+        if general_pos in enemy_valid_moves:
+            return True
+        else:
+            return False
+
+    def checkmate(self, color):
+        """helper function returns True if the color has been checkmated, False otherwise"""
+        # initialize colors
+        if color == "b":
+            friendly_color = "b"
+            enemy_color = "r"
+        elif color == "r":
+            friendly_color = "r"
+            enemy_color = "b"
+
+        # get all the enemy's valid moves
+        enemy_valid_moves = self.all_player_moves(enemy_color)
+        # get the friendly general
+        general_obj = self.get_general(friendly_color)
+
+        # if at least one of the general's valid moves is not in the enemy's valid moves,
+        # not checkmate
+        # else, checkmate
+        for move in general_obj.get_valid_moves():
+            if move not in enemy_valid_moves:
+                return False
+        return True
 
     def get_game_state(self):
         """getter for game state"""
@@ -231,12 +296,13 @@ class JanggiGame:
             Note:       a valid pass move is to indicate the same start and end square.
             Invalid if: start square is empty (None), not the starting square's turn,
                         game is finished, end square is not in the valid moves of the
-                        Piece instance from the start square.
+                        Piece instance from the start square, Piece is a General and
+                        end square is in the enemy's next valid moves.
                         Return False if any of the invalid conditions are True.
             If valid:   move Piece object from start square to end square
                         (removes opposing piece or fills empty square),
                         update moved Piece object's position, clear start square
-            Win check:  use is_in_check() on opposite player's General, if True
+            Win check:  use checkmate() on opposite player's General, if True
                         update game_state accordingly to reflect current player won.
             End:        update turn for next player, return True
         :param start: algebraic coordinate for the start square
@@ -264,6 +330,20 @@ class JanggiGame:
         if end_tup not in piece_obj.get_valid_moves():  # invalid if end position is not valid for this piece
             return False
 
+        # initialize colors
+        if piece_obj.get_color() == "b":
+            enemy_color = "r"
+        if piece_obj.get_color() == "r":
+            enemy_color = "b"
+
+        # get enemy's valid moves
+        enemy_valid_moves = self.all_player_moves(enemy_color)
+        # if the starting square is a general,
+        # and if the end square is in the enemy's next valid moves,
+        # the move is invalid (General can't put itself in check)
+        if "Gn" in piece_obj.get_name() and end_tup in enemy_valid_moves:
+            return False
+
         # otherwise, VALID MOVE
         start_tup = algebraic_to_numeric(start)
         start_row, start_col = start_tup
@@ -276,7 +356,13 @@ class JanggiGame:
         piece_obj.set_position(end)             # store new position (algebraic coordinate)
         board[start_row][start_col] = None      # clear start square
 
-        # UPDATE GAME STATE IF NECESSARY (win check)
+        # if the enemy general has no valid moves, checkmate!!!
+        if self.checkmate(enemy_color):
+            # update win state
+            if self.get_turn() == "b":
+                self.set_game_state("BLUE_WON")
+            elif self.get_turn() == "r":
+                self.set_game_state("RED_WON")
 
         # update turn
         self.update_turn()
@@ -768,8 +854,9 @@ class General(Piece):
             if coord in fortress:
                 fortress_moves.append(coord)  # only add coordinates that are in the fortress
         # don't include any moves that have a piece with the same color as the current turn (blocked)
-        all_valid_moves = self.remove_same_color(fortress_moves)
-        return all_valid_moves
+        current_valid_moves = self.remove_same_color(fortress_moves)
+
+        return current_valid_moves
 
 
 class Cannon(Piece):
