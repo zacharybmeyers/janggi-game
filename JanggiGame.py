@@ -838,20 +838,20 @@ class Cannon(Piece):
                 # check for cases where we've found a valid jump but it's on the edge of the board
                 if self.on_game_board((next_row, next_column)):
                     next_piece = board[next_row][next_column]
-                # while each next square is empty and on the board,
-                # keep moving along straight line AND ADD VALID MOVES
-                while next_piece is None and self.on_game_board((next_row, next_column)):
-                    orthogonal_moves.append((next_row, next_column))
-                    if direction == "right" or direction == "left":  # move across board based on direction
-                        next_column += step
-                    elif direction == "down" or direction == "up":
-                        next_row += step
-                    next_piece = board[next_row][next_column]
-                # a piece has been found, or we're off the board
-                if self.on_game_board((next_row, next_column)):     # if still on game board...
-                    # if not a cannon and an enemy piece, add to valid moves, end loop
-                    if "Cn" not in next_piece.get_name() and next_piece.get_color() != self.get_color():
+                    # while each next square is empty and on the board,
+                    # keep moving along straight line AND ADD VALID MOVES
+                    while next_piece is None and self.on_game_board((next_row, next_column)):
                         orthogonal_moves.append((next_row, next_column))
+                        if direction == "right" or direction == "left":  # move across board based on direction
+                            next_column += step
+                        elif direction == "down" or direction == "up":
+                            next_row += step
+                        next_piece = board[next_row][next_column]
+                    # a piece has been found, or we're off the board
+                    if self.on_game_board((next_row, next_column)):     # if still on game board...
+                        # if not a cannon and an enemy piece, add to valid moves, end loop
+                        if "Cn" not in next_piece.get_name() and next_piece.get_color() != self.get_color():
+                            orthogonal_moves.append((next_row, next_column))
         return orthogonal_moves
 
     def fortress_moves(self):
