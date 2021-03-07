@@ -243,6 +243,9 @@ class JanggiGame:
         :param end: algebraic coordinate for the end square
         :return: True if valid move, False otherwise
         """
+        # for debugging gradescope
+        print(f"Attempting: {start} -> {end}")
+
         # first check for a valid pass move
         if start == end:
             self.update_turn()      # update turn
