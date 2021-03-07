@@ -371,7 +371,8 @@ class Chariot(Piece):
     def orthogonal_moves(self, direction):
         """
         helper function returns a list of possible orthogonal moves
-        based on the direction given
+        based on the direction given.
+        uses helper function on_game_board()
         :param direction: either 'right', 'left', 'down', or 'up'
         :returns: orthogonal_moves
         """
@@ -398,9 +399,7 @@ class Chariot(Piece):
         board = self._game.get_board()
         valid_square = True
         while valid_square:
-            row_len = len(board[0])
-            col_len = len(board)
-            if 0 <= next_column < row_len and 0 <= next_row < col_len:  # if next piece is on the board
+            if self.on_game_board((next_row, next_column)):  # if next piece is on the board
                 # get next piece
                 next_piece = board[next_row][next_column]
                 if next_piece is None:                                      # if empty, valid move
@@ -506,7 +505,7 @@ class Elephant(Piece):
         helper function returns a list of possible diagonal moves 2 squares away
         from the current position based on the direction given.
         verifies the moves aren't blocked, and that they are on the game board with
-        the use of the remove_out_of_bounds() helper function.
+        the use of on_game_board() and remove_out_of_bounds() helper functions.
         :param direction: either 'right', 'left', 'down', or 'up'
         :returns: diagonal_moves
         """
@@ -531,10 +530,7 @@ class Elephant(Piece):
             next_row = row_index + step  # move row index either down or up
 
         diagonal_moves = list()
-        col_len = len(board)
-        row_len = len(board[0])
-
-        if 0 <= next_row < col_len and 0 <= next_column < row_len:  # if in bounds
+        if self.on_game_board((next_row, next_column)):  # if in bounds
             ortho_square = (next_row, next_column)
             ortho_square_alg = numeric_to_algebraic(ortho_square)
             ortho_obj = self._game.get_square_contents(ortho_square_alg)
@@ -596,7 +592,7 @@ class Horse(Piece):
         helper function returns a list of possible diagonal moves 1 square away
         based on the direction given.
         verifies the moves aren't blocked, and that they are on the game board with
-        the use of the remove_out_of_bounds() helper function.
+        the use of the on_game_board() and remove_out_of_bounds() helper functions.
         :param direction: either 'right', 'left', 'down', or 'up'
         :returns: diagonal_moves
         """
@@ -624,7 +620,7 @@ class Horse(Piece):
         col_len = len(board)
         row_len = len(board[0])
 
-        if 0 <= next_row < col_len and 0 <= next_column < row_len:  # if in bounds
+        if self.on_game_board((next_row, next_column)):  # if in bounds
             ortho_square = (next_row, next_column)
             ortho_square_alg = numeric_to_algebraic(ortho_square)
             ortho_obj = self._game.get_square_contents(ortho_square_alg)
@@ -822,7 +818,8 @@ class Cannon(Piece):
         orthogonal_moves = list()
         board = self._game.get_board()
 
-        # get next piece if it's on the board
+        # get next piece if it's on the board, until off the board
+        # or a different piece is found...
         if self.on_game_board((next_row, next_column)):
             next_piece = board[next_row][next_column]
             # while next square is empty and on game board, keep moving along straight line
@@ -831,7 +828,8 @@ class Cannon(Piece):
                     next_column += step
                 elif direction == "down" or direction == "up":
                     next_row += step
-                next_piece = board[next_row][next_column]
+                if self.on_game_board((next_row, next_column)):
+                    next_piece = board[next_row][next_column]
             # a piece has been found, or we're off the board
             if self.on_game_board((next_row, next_column)):     # if still on game board...
                 if "Cn" not in next_piece.get_name():           # if not a cannon, can jump over!
@@ -839,7 +837,6 @@ class Cannon(Piece):
                         next_column += step
                     elif direction == "down" or direction == "up":
                         next_row += step
-                    # check for cases where we've found a valid jump but it's on the edge of the board
                     if self.on_game_board((next_row, next_column)):
                         next_piece = board[next_row][next_column]
                         # while each next square is empty and on the board,
