@@ -3,7 +3,7 @@
 # Description:
 
 import unittest
-from JanggiGame import JanggiGame, Soldier, Chariot, Horse, algebraic_to_numeric, numeric_to_algebraic
+from JanggiGame import JanggiGame, Soldier, Chariot, Horse, Elephant, algebraic_to_numeric, numeric_to_algebraic
 
 
 class UnitTests(unittest.TestCase):
@@ -98,7 +98,7 @@ class UnitTests(unittest.TestCase):
         self.assertTrue(self.game.make_move("e2", "d3"))
 
     def test_general_pass_valid(self):
-        self.assertTrue(self.game.make_move("e2", "e2"))
+        self.assertTrue(self.game.make_move("e9", "e9"))
 
     def test_guard_moves(self):
         # blue guard to d9
@@ -111,14 +111,12 @@ class UnitTests(unittest.TestCase):
         self.assertFalse(self.game.make_move("d9", "e9"))
         self.game.set_turn("b")
 
-    def test_guard_capture(self):
+    def test_guard_capture_clears_check(self):
         # blue guard captures enemy soldier
         red_sold = Soldier(self.game, "r")                  # make new red soldier
-        self.game.set_square_contents("d9", red_sold)       # move it to d9
+        self.game.set_square_contents("d9", red_sold)       # move it to d9 (causing check!)
         red_sold.set_position("d9")
-        self.game.make_move("d10", "d9")                    # move guard to capture red soldier
-        d9_piece = self.game.get_square_contents("d9")      # get the piece at d9
-        self.assertEqual("bGd", d9_piece.get_name())        # test it is the blue guard (capture success)
+        self.assertTrue(self.game.make_move("d10", "d9"))   # move guard to capture red soldier and remove check
 
     def test_chariot_orthogonal_moves(self):
         b_char = Chariot(self.game, "b")                    # make new blue chariot
@@ -131,13 +129,24 @@ class UnitTests(unittest.TestCase):
         b_char = Chariot(self.game, "b")                # make new blue chariot
         self.game.set_square_contents("d3", b_char)     # move it to d3 (fortress corner)
         b_char.set_position("d3")
+
+        red_gen = self.game.get_square_contents("e2")   # get rGn
+        self.game.set_square_contents("e2", None)       # clear rGn at e2
+        self.game.set_square_contents("f2", red_gen)    # move to f2
+        red_gen.set_position("f2")
+
         self.assertTrue(self.game.make_move("d3", "e2"))
 
     def test_chariot_diagonal_two_squares(self):
-        b_char = Chariot(self.game, "b")                # make new blue chariot
-        self.game.set_square_contents("d3", b_char)     # move it to d3 (fortress corner)
+        b_char = Chariot(self.game, "b")  # make new blue chariot
+        self.game.set_square_contents("d3", b_char)  # move it to d3 (fortress corner)
         b_char.set_position("d3")
-        self.game.set_square_contents("e2", None)       # remove the general
+
+        red_gen = self.game.get_square_contents("e2")  # get rGn
+        self.game.set_square_contents("e2", None)  # clear rGn at e2
+        self.game.set_square_contents("f2", red_gen)  # move to f2
+        red_gen.set_position("f2")
+
         self.assertTrue(self.game.make_move("d3", "f1"))
 
     def test_horse_capture_move(self):
@@ -154,3 +163,10 @@ class UnitTests(unittest.TestCase):
         self.game.set_square_contents("c10", None)      # clear horse at c10
         valid_moves = [(6, 1), (6, 3), (9, 4), (7, 4), (7, 0)]
         self.assertCountEqual(valid_moves, b_horse.get_valid_moves())
+
+    def test_elephant_moves(self):
+        b_ele = Elephant(self.game, "b")
+        self.game.set_square_contents("d5", b_ele)
+        b_ele.set_position("d5")
+        valid_moves = [(1, 5), (1, 1), (2, 0), (2, 6)]
+        self.assertCountEqual(valid_moves, b_ele.get_valid_moves())
