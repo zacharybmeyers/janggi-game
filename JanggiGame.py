@@ -347,7 +347,8 @@ class JanggiGame:
         """
         Checks the validity of a move, uses get_valid_moves() from the Piece class instance
         found at the start square.
-            Note:       a valid pass move is to indicate the same start and end square.
+            Note:       each piece has a valid pass move in its set of valid moves.
+                        it is treated like any other move.
             Invalid if: start square is empty (None), not the starting square's turn,
                         game is finished, end square is not in the valid moves of the
                         Piece instance from the start square, the hypothetical move
@@ -367,11 +368,6 @@ class JanggiGame:
         self.display_board()
         print(self.get_game_state())
         print(f"Attempting: {start} -> {end}")
-
-        # first check for a valid pass move
-        if start == end:
-            self.update_turn()      # update turn
-            return True
 
         # INVALID CONDITIONS
         # get the Piece from the start square
@@ -652,6 +648,10 @@ class Chariot(Piece):
         # use helper to get fortress moves, add to running list
         chariot_moves.extend(self.fortress_moves())
 
+        # add current position (pass move) to valid moves
+        chariot_pos = self.get_numeric_position()
+        chariot_moves.append(chariot_pos)
+
         return chariot_moves
 
 
@@ -742,6 +742,11 @@ class Elephant(Piece):
         elephant_moves.extend(self.elephant_diagonal_moves("down"))
         elephant_moves.extend(self.elephant_diagonal_moves("right"))
         elephant_moves.extend(self.elephant_diagonal_moves("left"))
+
+        # add elephant's current position (pass move) as a valid move
+        elephant_pos = self.get_numeric_position()
+        elephant_moves.append(elephant_pos)
+
         return elephant_moves
 
 
@@ -820,6 +825,11 @@ class Horse(Piece):
         horse_moves.extend(self.horse_diagonal_moves("down"))
         horse_moves.extend(self.horse_diagonal_moves("right"))
         horse_moves.extend(self.horse_diagonal_moves("left"))
+
+        # add horse's current position (pass move) to valid moves
+        horse_pos = self.get_numeric_position()
+        horse_moves.append(horse_pos)
+
         return horse_moves
 
 
@@ -878,7 +888,13 @@ class Guard(Piece):
         for coord in guard_moves:
             if coord in fortress:
                 fortress_moves.append(coord)  # only add coordinates that are in the fortress
-        return self.remove_same_color(fortress_moves)       # remove any squares that are friendly
+
+        all_moves = self.remove_same_color(fortress_moves)  # remove any squares that are friendly
+
+        # add guard's current position (pass move) to valid moves
+        all_moves.append(guard_pos)
+
+        return all_moves
 
 
 class General(Piece):
@@ -940,7 +956,7 @@ class General(Piece):
         # don't include any moves that have a piece with the same color as the current turn (blocked)
         current_valid_moves = self.remove_same_color(fortress_moves)
 
-        # add the general's current position as a valid move
+        # add the general's current position (pass move) as a valid move
         current_valid_moves.append(gen_pos)
 
         return current_valid_moves
@@ -1096,6 +1112,11 @@ class Cannon(Piece):
         cannon_moves.extend(self.orthogonal_moves("right"))
         cannon_moves.extend(self.orthogonal_moves("left"))
         cannon_moves.extend(self.fortress_moves())
+
+        # add cannon's current position (pass move) to valid moves
+        cannon_pos = self.get_numeric_position()
+        cannon_moves.append(cannon_pos)
+
         return cannon_moves
 
 
@@ -1159,6 +1180,9 @@ class Soldier(Piece):
         in_bounds_moves = self.remove_out_of_bounds(sold_moves)
         # don't include any moves that have a piece with the same color as the current turn (blocked)
         all_valid_moves = self.remove_same_color(in_bounds_moves)
+
+        # add soldier's current position (pass move) to valid moves
+        all_valid_moves.append(sold_pos)
 
         return all_valid_moves
 

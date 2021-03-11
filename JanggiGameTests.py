@@ -42,7 +42,7 @@ class UnitTests(unittest.TestCase):
         # blue soldier at b7 can't move to c7 (occupied by another blue soldier)
         game.make_move("a7", "b7")                     # move a7 to b7
         game.set_turn("b")                             # reset turn
-        b7_valid_moves = [(5, 1), (6, 0)]
+        b7_valid_moves = [(5, 1), (6, 0), (6, 1)]
         b7_b_sold = game.get_square_contents("b7")     # get piece object
         self.assertEqual(b7_valid_moves, b7_b_sold.get_valid_moves())
 
@@ -50,12 +50,12 @@ class UnitTests(unittest.TestCase):
         game = JanggiGame()
         # blue soldier at A7 can't move off board
         a7_b_sold = game.get_square_contents("a7")
-        blue_moves = [(5, 0), (6, 1)]
-        self.assertEqual(blue_moves, a7_b_sold.get_valid_moves())
+        blue_moves = [(5, 0), (6, 1), (6, 0)]
+        self.assertCountEqual(blue_moves, a7_b_sold.get_valid_moves())
 
         # red soldier at A4 can't move off board
         a4_r_sold = game.get_square_contents("a4")
-        red_moves = [(4, 0), (3, 1)]
+        red_moves = [(4, 0), (3, 1), (3, 0)]
         self.assertEqual(red_moves, a4_r_sold.get_valid_moves())
 
     def test_soldier_diagonal_fortress_center(self):
@@ -134,7 +134,7 @@ class UnitTests(unittest.TestCase):
         b_char = Chariot(game, "b")                    # make new blue chariot
         game.set_square_contents("e6", b_char)         # move it to e6
         b_char.set_position("e6")
-        valid_moves = [(5, 0), (5, 1), (5, 2), (5, 3), (5, 5), (5, 6), (5, 7), (5, 8), (4, 4), (3, 4)]
+        valid_moves = [(5, 0), (5, 1), (5, 2), (5, 3), (5, 5), (5, 6), (5, 7), (5, 8), (4, 4), (3, 4), (5, 4)]
         self.assertCountEqual(valid_moves, b_char.get_valid_moves())
 
     def test_chariot_diagonal_to_center(self):
@@ -177,7 +177,7 @@ class UnitTests(unittest.TestCase):
         game.set_square_contents("c9", b_horse)    # create blue horse at c9
         b_horse.set_position("c9")                      # set position
         game.set_square_contents("c10", None)      # clear horse at c10
-        valid_moves = [(6, 1), (6, 3), (9, 4), (7, 4), (7, 0)]
+        valid_moves = [(6, 1), (6, 3), (9, 4), (7, 4), (7, 0), (8, 2)]
         self.assertCountEqual(valid_moves, b_horse.get_valid_moves())
 
     def test_elephant_moves(self):
@@ -185,7 +185,7 @@ class UnitTests(unittest.TestCase):
         b_ele = Elephant(game, "b")
         game.set_square_contents("d5", b_ele)
         b_ele.set_position("d5")
-        valid_moves = [(1, 5), (1, 1), (2, 0), (2, 6)]
+        valid_moves = [(1, 5), (1, 1), (2, 0), (2, 6), (4, 3)]
         self.assertCountEqual(valid_moves, b_ele.get_valid_moves())
 
     def test_cannon_jump_over_friendly_color(self):
