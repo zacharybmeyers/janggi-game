@@ -1,14 +1,36 @@
 # Author:       Zachary Meyers
 # Date:         2021-03-10
-# Description:
+# Description:  Portfolio Project for playing a game of Janggi (Korean Chess).
+#                   The JanggiGame class sets up a board for play (list of lists) with all
+#               appropriate Pieces, and has methods for making moves, determining check, etc.
+#               and numerous helper methods for converting coordinates, displaying and
+#               changing the game board, etc.
+#                   The Piece class is the parent class for all specific pieces on the board.
+#               each piece has a color and a position, and each piece uses composition with the
+#               JanggiGame class to make use of its methods.
+#                   Each specific child of the Piece class (ie Soldier(), General(), Cannon(), etc.)
+#               inherits from the Piece class, and additionally has a name
+#               (combination of color and abbreviation, ie bGn for a blue General) and a method
+#               get_valid_moves() -- this is very important. There may be helper methods within each
+#               child of the Piece class that help determine the valid move set of that specific Piece.
+#                   The JanggiGame class has an important method, make_move(), which allows for play of
+#               the game and validation of moves based on the player's turn, if a move causes check, if
+#               a player is in checkmate, etc. It uses the get_valid_moves() method from the Piece to be
+#               moved as part of its validation, so it is important that each child of the Piece class
+#               has a get_valid_moves() method that is specific to that Piece's move set.
 
 class JanggiGame:
     """Represents a game of Janggi"""
     def __init__(self):
-        """initializes private data members"""
+        """
+        Initializes private data members for:
+            game state, current turn, fortress coordinates, game board
+        Sets up the positions for every Piece.
+        """
         self._game_state = "UNFINISHED"
-        self._turn = "b"
-        # initialize blue fortress coordinates for use in each Piece subclass
+        self._turn = "b"        # blue starts the game
+        # initialize blue fortress coordinates for use in each Piece subclass,
+        # can be converted to red fortress coordinates with use of helper method invert_coordinates()
         self._b_fortress = [(7, 3), (8, 3), (9, 3), (7, 4), (8, 4), (9, 4), (7, 5), (8, 5), (9, 5)]
         self._b_fort_corners = [(7, 3), (7, 5), (9, 3), (9, 5)]
         self._b_fort_center = [(8, 4)]
@@ -29,23 +51,23 @@ class JanggiGame:
              Guard(self, "b"), Elephant(self, "b"), Horse(self, "b"), Chariot(self, "b")],
         ]
         # set starting positions for game pieces
-        self.setup_board()
+        self.setup_piece_positions()
 
     def get_board(self):
         """getter for board"""
         return self._board
 
-    def setup_board(self):
-        """helper function gives a position to every Piece on the board"""
+    def setup_piece_positions(self):
+        """helper function gives an algebraic position to every Piece on the board"""
         # set starting positions for game pieces
         row_index = 0
         for row in self.get_board():
             col_index = 0
-            for elem in row:
-                if type(elem) in Piece.__subclasses__():  # if element is a Piece
-                    num_coord = (row_index, col_index)  # create coordinate
-                    alg_coord = self.numeric_to_algebraic(num_coord)  # convert to algebraic
-                    elem.set_position(alg_coord)  # set the position
+            for piece_obj in row:
+                if piece_obj is not None:                               # if element is a Piece
+                    num_coord = (row_index, col_index)                  # create coordinate
+                    alg_coord = self.numeric_to_algebraic(num_coord)    # convert to algebraic
+                    piece_obj.set_position(alg_coord)                   # set the position
                 col_index += 1
             row_index += 1
 
@@ -135,13 +157,13 @@ class JanggiGame:
         tup_list.clear()
         tup_list.extend(inverted_list)
 
-    def list_format(self, alist):
+    def list_format(self, a_list):
         """
         helper function takes a list and returns a printable string
         with the proper column width (9) for each list element
         """
         print_str = ""
-        for elem in alist:
+        for elem in a_list:
             if type(elem) in Piece.__subclasses__():  # if child of Piece class, use 3 letter name
                 elem_str = elem.get_name()
                 spaces = "   "  # 3 spaces for either side
@@ -193,7 +215,8 @@ class JanggiGame:
 
     def get_square_contents(self, alg_coord):
         """
-        Returns whatever is found at the given square's position in the game board.
+        Returns whatever is found at the given square's position in the game board
+        (either a Piece or None)
         :param alg_coord: in string format ie 'b1'
         :return: the object in the square (or None)
         """
@@ -243,58 +266,19 @@ class JanggiGame:
                         all_valid_moves.extend(piece_obj.get_valid_moves())
         return all_valid_moves
 
-    def get_enemies_causing_check(self, color):
-        """
-        helper function returns a list of algebraic positions of the enemies
-        that are causing the friendly player to be in check
-        """
-        # initialize colors
-        friendly_color = None
-        enemy_color = None
-        if color == "b":
-            friendly_color = "b"
-            enemy_color = "r"
-        elif color == "r":
-            friendly_color = "r"
-            enemy_color = "b"
-
-        # get the friendly general
-        general_obj = self.get_general(friendly_color)
-        # get the general's position
-        general_pos = general_obj.get_numeric_position()
-
-        # create a list of enemy squares that are causing check
-        enemies_causing_check = list()
-        board = self.get_board()
-        # iterate through all pieces on the game board
-        for row in board:
-            for piece_obj in row:
-                # if not empty...
-                if piece_obj is not None:
-                    # if enemy piece
-                    if enemy_color in piece_obj.get_name():
-                        # if that piece is causing check
-                        if general_pos in piece_obj.get_valid_moves():
-                            # add the position to enemies causing check
-                            enemies_causing_check.append(piece_obj.get_position())
-        return enemies_causing_check
-
     def is_in_check(self, color):
         """
         Takes a color for the player in question.
-        Call get_valid_moves()) on every one of the enemy player's remaining pieces,
-        to create a large list of all possible next moves.
+        Use all_player_moves to create a large list of all of the enemy's possible next moves.
         If the friendly General's position is in this list of enemy_valid_moves (able to be captured),
         they are in check, return True.
         Otherwise, return False.
         """
         # initialize colors
-        friendly_color = None
-        enemy_color = None
         if color == "blue":
             friendly_color = "b"
             enemy_color = "r"
-        elif color == "red":
+        else:
             friendly_color = "r"
             enemy_color = "b"
 
@@ -306,6 +290,7 @@ class JanggiGame:
         general_pos = general_obj.get_numeric_position()
 
         # if the general's position can be captured by the opposite player
+        # on the next turn, they are in check
         if general_pos in enemy_valid_moves:
             return True
         else:
@@ -313,33 +298,35 @@ class JanggiGame:
 
     def hypothetical_move(self, start, end):
         """
-        helper function to be used for testing checkmate.
-        takes a General's current position and a hypothetical end position,
+            Helper function checks the validity of a potential move
+        (invalid if it puts or leaves the player in check). It is used for testing
+        checkmate on all of a General's valid moves at the end of make_move.
+            Takes a Piece's current position and a hypothetical end position,
+        (assumes start and end position have already been validated in make_move).
         temporarily sets the game board to this scenario.
-        if the move would cause the general to be in check, returns False,
-        otherwise return True
+            If the move would cause the player to be in check, returns False,
+        otherwise return True.
         """
-        # get General from start position
-        general_obj = self.get_square_contents(start)
+        # get Piece from start position
+        piece_obj = self.get_square_contents(start)
         # get object from end position (either a Piece or None)
         end_obj = self.get_square_contents(end)
         # clear start position
         self.set_square_contents(start, None)
         # set General to end position
-        self.set_square_contents(end, general_obj)
-        general_obj.set_position(end)
+        self.set_square_contents(end, piece_obj)
+        piece_obj.set_position(end)
 
-        # get color from general
+        # get color from starting piece
         check_color = None
-        if general_obj.get_color() == "r":
+        if piece_obj.get_color() == "r":
             check_color = "red"
-        elif general_obj.get_color() == "b":
+        elif piece_obj.get_color() == "b":
             check_color = "blue"
 
-        # run is_in_check on General,
+        # run is_in_check on the current player,
         # if in check, set valid_move to FALSE
         # else set valid_move to TRUE
-        valid_move = None
         if self.is_in_check(check_color):
             valid_move = False
         else:
@@ -349,11 +336,11 @@ class JanggiGame:
         self.set_square_contents(end, end_obj)
         if end_obj is not None:
             end_obj.set_position(end)
-        # set General back to start position
-        self.set_square_contents(start, general_obj)
-        general_obj.set_position(start)
+        # set Piece back to start position
+        self.set_square_contents(start, piece_obj)
+        piece_obj.set_position(start)
 
-        # return whether or not this hypothetical move caused the general to be in check
+        # return whether or not this hypothetical move caused the player to be in check
         return valid_move
 
     def make_move(self, start, end):
@@ -363,20 +350,21 @@ class JanggiGame:
             Note:       a valid pass move is to indicate the same start and end square.
             Invalid if: start square is empty (None), not the starting square's turn,
                         game is finished, end square is not in the valid moves of the
-                        Piece instance from the start square, Piece is a General and
-                        end square is in the enemy's next valid moves.
+                        Piece instance from the start square, the hypothetical move
+                        causes the general to be in (or remain in) check.
                         Return False if any of the invalid conditions are True.
             If valid:   move Piece object from start square to end square
                         (removes opposing piece or fills empty square),
                         update moved Piece object's position, clear start square
-            Win check:  use checkmate() on opposite player's General, if True
+            Win check:  Look for checkmate on opposite player's General, if True
                         update game_state accordingly to reflect current player won.
             End:        update turn for next player, return True
         :param start: algebraic coordinate for the start square
         :param end: algebraic coordinate for the end square
         :return: True if valid move, False otherwise
         """
-        # for debugging gradescope
+        # for debugging
+        self.display_board()
         print(self.get_game_state())
         print(f"Attempting: {start} -> {end}")
 
@@ -398,46 +386,25 @@ class JanggiGame:
         if end_tup not in piece_obj.get_valid_moves():  # invalid if end position is not valid for this piece
             return False
 
-        # initialize colors
-        friendly_color = None
-        friendly_color_for_check = None
-        enemy_color = None
-        enemy_color_for_check = None
-        if piece_obj.get_color() == "b":
-            friendly_color = "b"
-            friendly_color_for_check = "blue"
-            enemy_color = "r"
-            enemy_color_for_check = "red"
-        if piece_obj.get_color() == "r":
-            friendly_color = "r"
-            friendly_color_for_check = "red"
-            enemy_color = "b"
-            enemy_color_for_check = "blue"
+        # initialize colors for the current and next player,
+        # convert single letters to full words to use with is_in_check() method
+        current_color = self.get_turn()
+        if current_color == "b":
+            current_color_for_check = "blue"
+            next_color = "r"
+            next_color_for_check = "red"
+        else:
+            current_color_for_check = "red"
+            next_color = "b"
+            next_color_for_check = "blue"
 
-        # get enemy's valid moves
-        enemy_valid_moves = self.all_player_moves(enemy_color)
-        # if the starting square is a general,
-        # and if the end square is in the enemy's next valid moves,
-        # the move is invalid (General can't put itself in check)
-        if "Gn" in piece_obj.get_name() and end_tup in enemy_valid_moves:
-            return False
-
-        # if the current player is in check...
-        # must capture the piece causing check or move general
-        if self.is_in_check(friendly_color_for_check):
-            enemies_causing_check = self.get_enemies_causing_check(friendly_color)
-            # if only one Piece is causing check...
-            if len(enemies_causing_check) == 1:
-                enemy_pos = enemies_causing_check[0]
-                # if not moving general, must be trying to capture the one piece that is causing check
-                if "Gn" not in piece_obj.get_name():
-                    if enemy_pos not in end:
-                        return False
-            # if multiple Pieces are causing check...
-            if len(enemies_causing_check) > 1:
-                # if general isn't being moved out of check, invalid move
-                if "Gn" not in piece_obj.get_name():
-                    return False
+        # At this point, the current player's move is in their valid move set, but...
+        #   if the current player is in check...
+        #       and if their hypothetical move is False (puts or leaves their general in check),
+        #           invalid move
+        if self.is_in_check(current_color_for_check):
+            if self.hypothetical_move(start, end) is False:
+                return False
 
         # otherwise, VALID MOVE
         start_tup = self.algebraic_to_numeric(start)
@@ -451,12 +418,13 @@ class JanggiGame:
         piece_obj.set_position(end)             # store new position (algebraic coordinate)
         board[start_row][start_col] = None      # clear start square
 
-        # to determine checkmate: make use of hypothetical_move() helper
+        # if the next player is in check...
+        # try to determine checkmate: make use of hypothetical_move() helper
         checkmate = None
-        if self.is_in_check(enemy_color_for_check):
+        if self.is_in_check(next_color_for_check):
             # initialize checkmate to True
             checkmate = True
-            enemy_general = self.get_general(enemy_color)
+            enemy_general = self.get_general(next_color)
             enemy_general_pos = enemy_general.get_position()
             for move in enemy_general.get_valid_moves():
                 # try a hypothetical move
@@ -1169,9 +1137,10 @@ class Soldier(Piece):
 
         # if soldier is red, vertical direction is positive (move down game board),
         # if soldier is blue, vertical direction is negative (move up game board)
-        vertical = -1
         if self.get_color() == "r":
             vertical = 1
+        else:
+            vertical = -1
 
         sold_moves = list()
         sold_moves.append((row_index+vertical, col_index))      # forward one
@@ -1195,60 +1164,99 @@ class Soldier(Piece):
 
 
 def main():
-    # checkmate test sequence where elephant covers soldier
+    # full game sequence test, cannon removes red check along the way
     game = JanggiGame()
-    game.make_move('e7', 'e6')
-    game.make_move('e2', 'e2')
-    game.make_move('e6', 'e5')
-    game.make_move('e2', 'e2')
-    game.make_move('e5', 'e4')
-    game.make_move('e2', 'e2')
-    game.make_move('e4', 'd4')
-    game.make_move('e2', 'e2')
-    game.make_move('d4', 'c4')
-    game.make_move('e2', 'e2')
-    game.make_move('a10', 'a9')
-    game.make_move('e2', 'e2')
-    game.make_move('a9', 'd9')
-    game.make_move('e2', 'e2')
-    game.make_move('d9', 'd8')
-    game.make_move('e2', 'e2')
-    game.make_move('d8', 'd7')
-    game.make_move('e2', 'e2')
-    game.make_move('d7', 'd6')
-    game.make_move('i1', 'i2')
-    game.make_move('e9', 'e9')
-    game.make_move('i2', 'g2')
-    game.make_move('e9', 'e9')
+    print(game.is_in_check('red'))
+    print(game.is_in_check('blue'))
+    game.make_move('a7', 'b7')
     game.make_move('i4', 'h4')
-    game.make_move('e9', 'e9')
-    game.make_move('h3', 'h5')
-    game.make_move('i10', 'i9')
-    game.make_move('e2', 'e2')
-    game.make_move('i9', 'g9')
-    game.make_move('e2', 'e2')
-    game.make_move('g9', 'g8')
-    game.make_move('e2', 'e2')
+    game.make_move('h10', 'g8')
+    game.make_move('c1', 'd3')
+    game.make_move('h8', 'e8')
+    game.make_move('i1', 'i2')
+    game.make_move('e7', 'f7')
+    print(game.is_in_check('red'))
+    print(game.is_in_check('blue'))
+    game.make_move('b3', 'e3')
+    print(game.is_in_check('red'))
+    print(game.is_in_check('blue'))
+    game.make_move('g10', 'e7')
+    game.make_move('e4', 'd4')
+    game.make_move('c10', 'd8')
+    game.make_move('g1', 'e4')
+    game.make_move('f10', 'f9')
+    game.make_move('h1', 'g3')
+    game.make_move('a10', 'a6')
+    game.make_move('d4', 'd5')
+    game.make_move('e9', 'f10')
+    game.make_move('h3', 'f3')
+    game.make_move('e8', 'h8')
+    game.make_move('i2', 'h2')
     game.make_move('h8', 'f8')
-    game.make_move('f1', 'e1')
+    game.make_move('f1', 'f2')
+    game.make_move('b8', 'e8')
+    game.make_move('f3', 'f1')
+    game.make_move('i7', 'h7')
+    game.make_move('f1', 'c1')
+    game.make_move('d10', 'e9')
+    game.make_move('a4', 'b4')
+    game.make_move('a6', 'a1')
+    game.make_move('c1', 'a1')
+    game.make_move('f8', 'd10')
+    game.make_move('d5', 'c5')
+    game.make_move('i10', 'i6')
+    game.make_move('b1', 'd4')
+    game.make_move('c7', 'c6')
+    game.make_move('c5', 'b5')
+    game.make_move('b10', 'd7')
+    game.make_move('d4', 'f7')
     game.make_move('g7', 'f7')
-    game.make_move('e2', 'e2')
-    game.make_move('i7', 'i6')
-    game.make_move('e2', 'e2')
-    game.make_move('g10', 'i7')
-    game.make_move('e2', 'e2')
-    game.make_move('i7', 'f5')
-    game.make_move('e2', 'e2')
-    game.make_move('f5', 'd8')
-    game.make_move('e2', 'e2')
-    game.make_move('d8', 'b5')
-    game.make_move('e2', 'e2')
+    game.make_move('a1', 'f1')
+    game.make_move('g8', 'f6')
+    game.make_move('f1', 'f5')
+    game.make_move('f6', 'd5')
+    game.make_move('e3', 'e5')
+    game.make_move('f7', 'f6')
+    game.make_move('f5', 'f7')
+    print(game.is_in_check('red'))
+    print(game.is_in_check('blue'))
+    game.make_move('f10', 'e10')
+    print(game.is_in_check('red'))
+    print(game.is_in_check('blue'))
+    game.make_move('e2', 'f1')
+    game.make_move('i6', 'i3')
+    game.make_move('h2', 'g2')
+    game.make_move('i3', 'i1')
+    print(game.is_in_check('red'))
+    print(game.is_in_check('blue'))
+    game.make_move('f1', 'e2')
+    print(game.is_in_check('red'))
+    print(game.is_in_check('blue'))
+    game.make_move('f6', 'f5')
     game.make_move('c4', 'd4')
-    game.make_move('e2', 'e2')
-    game.make_move('d4', 'e4')
-    game.make_move('e2', 'e2')
-    # checkmate
-    print(game.make_move('e4', 'e3'))
+    game.make_move('f5', 'e5')
+    game.make_move('f7', 'd7')
+    game.make_move('e7', 'g4')
+    game.make_move('d4', 'd5')
+    game.make_move('e5', 'e4')
+    game.make_move('d3', 'e5')
+    game.make_move('e4', 'e3')
+    print(game.is_in_check('red'))
+    print(game.is_in_check('blue'))
+    game.make_move('e2', 'd2')
+    print(game.is_in_check('red'))
+    print(game.is_in_check('blue'))
+    game.make_move('e3', 'e2')
+    print(game.is_in_check('red'))
+    print(game.is_in_check('blue'))
+    print(game.make_move('d2', 'd3'))  # this move should get red out of check
+    print(game.is_in_check('red'))
+    print(game.is_in_check('blue'))
+    game.make_move('e8', 'e4')
+    game.make_move('f2', 'e2')
+    game.make_move('i1', 'd1')
+    game.make_move('e2', 'd2')
+    print(game.make_move('d1', 'f3'))
     print(game.get_game_state())
     game.display_board()
 
