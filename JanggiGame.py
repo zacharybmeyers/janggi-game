@@ -1,59 +1,7 @@
 # Author:       Zachary Meyers
-# Date:         2021-02-24
+# Date:         2021-03-10
 # Description:
 
-# HELPER FUNCTIONS FOR USE IN ALL CLASSES
-def algebraic_to_numeric(alg_coord):
-    """
-    helper function converts an algebraic coordinate to a numeric coordinate
-    :param alg_coord: in string format ie 'b1'
-    :return: the tuple with integer (x, y) coordinates
-    """
-    column = alg_coord[0]
-    row = alg_coord[1:]
-    row_index = int(row) - 1
-    col_index = 0
-    columns = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
-    for index, letter in enumerate(columns):
-        if letter == column:
-            col_index = index
-    return row_index, col_index
-
-
-def numeric_to_algebraic(num_coord):
-    """
-    helper function converts a numeric coordinate to an algebraic coordinate
-    :param num_coord: in tuple format ie (1, 2)
-    :return: the string with algebraic ie 'b1' coordinates
-    """
-    alg_str = ""
-    row_index = num_coord[0]
-    row_index += 1
-    col_index = num_coord[1]
-    columns = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
-    for index, letter in enumerate(columns):
-        if index == col_index:
-            alg_str += letter
-    alg_str += str(row_index)
-    return alg_str
-
-
-def invert_coordinates(tup_list):
-    """
-    helper function inverts a list of coordinates (tuples) across the Janggi board.
-    Returns: None
-    """
-    inverted_list = list()
-    for coord in tup_list:
-        row = coord[0]
-        col = coord[1]
-        inverted_coord = (9 - row, col)
-        inverted_list.append(inverted_coord)     # add inverted coord
-    tup_list.clear()
-    tup_list.extend(inverted_list)
-
-
-# CLASSES
 class JanggiGame:
     """Represents a game of Janggi"""
     def __init__(self):
@@ -96,7 +44,7 @@ class JanggiGame:
             for elem in row:
                 if type(elem) in Piece.__subclasses__():  # if element is a Piece
                     num_coord = (row_index, col_index)  # create coordinate
-                    alg_coord = numeric_to_algebraic(num_coord)  # convert to algebraic
+                    alg_coord = self.numeric_to_algebraic(num_coord)  # convert to algebraic
                     elem.set_position(alg_coord)  # set the position
                 col_index += 1
             row_index += 1
@@ -112,124 +60,6 @@ class JanggiGame:
     def get_blue_fortress_center(self):
         """getter for blue fortress center"""
         return self._b_fort_center
-
-    def get_player_pieces(self, color):
-        """
-        helper function is given a player's color and returns a list of every
-        Piece object they have currently on the board
-        """
-        player_pieces = list()
-        board = self.get_board()
-        for row in board:
-            for piece_obj in row:
-                if piece_obj is not None:
-                    if piece_obj.get_color() == color:
-                        player_pieces.append(piece_obj)
-        return player_pieces
-
-    def get_general(self, color):
-        """
-        helper function returns the General object found on the board
-        with a specified color
-        """
-        general_name = color + "Gn"
-        board = self.get_board()
-        # iterate through all pieces on the game board
-        for row in board:
-            for piece_obj in row:
-                # if not empty...
-                if piece_obj is not None:
-                    # if general, return general
-                    if general_name in piece_obj.get_name():
-                        return piece_obj
-
-    def all_player_moves(self, color):
-        """
-        helper function returns a large list of all the possible moves a player (color)
-        can make with their current set of pieces on the game board
-        """
-        all_valid_moves = list()
-        board = self.get_board()
-        # iterate through all pieces on the game board
-        for row in board:
-            for piece_obj in row:
-                # if not empty...
-                if piece_obj is not None:
-                    # if color
-                    if color in piece_obj.get_name():
-                        # get the valid moves and add them to the enemy list
-                        all_valid_moves.extend(piece_obj.get_valid_moves())
-        return all_valid_moves
-
-    def get_enemies_causing_check(self, color):
-        """
-        helper function returns a list of algebraic positions of the enemies
-        that are causing the friendly player to be in check
-        """
-        # initialize colors
-        friendly_color = None
-        enemy_color = None
-        if color == "b":
-            friendly_color = "b"
-            enemy_color = "r"
-        elif color == "r":
-            friendly_color = "r"
-            enemy_color = "b"
-
-        # get the friendly general
-        general_obj = self.get_general(friendly_color)
-        # get the general's position
-        alg_pos = general_obj.get_position()
-        general_pos = algebraic_to_numeric(alg_pos)
-
-        # create a list of enemy squares that are causing check
-        enemies_causing_check = list()
-        board = self.get_board()
-        # iterate through all pieces on the game board
-        for row in board:
-            for piece_obj in row:
-                # if not empty...
-                if piece_obj is not None:
-                    # if enemy piece
-                    if enemy_color in piece_obj.get_name():
-                        # if that piece is causing check
-                        if general_pos in piece_obj.get_valid_moves():
-                            # add the position to enemies causing check
-                            enemies_causing_check.append(piece_obj.get_position())
-        return enemies_causing_check
-
-    def is_in_check(self, color):
-        """
-        Takes a color for the player in question.
-        Call get_valid_moves()) on every one of the enemy player's remaining pieces,
-        to create a large list of all possible next moves.
-        If the friendly General's position is in this list of enemy_valid_moves (able to be captured),
-        they are in check, return True.
-        Otherwise, return False.
-        """
-        # initialize colors
-        friendly_color = None
-        enemy_color = None
-        if color == "blue":
-            friendly_color = "b"
-            enemy_color = "r"
-        elif color == "red":
-            friendly_color = "r"
-            enemy_color = "b"
-
-        # get all the enemy's valid moves
-        enemy_valid_moves = self.all_player_moves(enemy_color)
-        # get the friendly general
-        general_obj = self.get_general(friendly_color)
-        # get the general's position
-        alg_pos = general_obj.get_position()
-        general_pos = algebraic_to_numeric(alg_pos)
-
-        # if the general's position can be captured by the opposite player
-        if general_pos in enemy_valid_moves:
-            return True
-        else:
-            return False
 
     def get_game_state(self):
         """getter for game state"""
@@ -253,6 +83,57 @@ class JanggiGame:
             self.set_turn("r")
         elif self.get_turn() == "r":
             self.set_turn("b")
+
+    # HELPER METHODS
+    def algebraic_to_numeric(self, alg_coord):
+        """
+        helper function converts an algebraic coordinate to a numeric coordinate
+        :param alg_coord: in string format ie 'b1'
+        :return: the tuple with integer (x, y) coordinates
+        """
+        columns = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
+        columns_dict = dict()
+        # make dictionary where key = "letter" val = number (index)
+        for index, letter in enumerate(columns):
+            columns_dict[letter] = index
+        column = alg_coord[0]
+        row = alg_coord[1:]
+        row_index = int(row) - 1
+        col_index = columns_dict[column]
+        return row_index, col_index
+
+    def numeric_to_algebraic(self, num_coord):
+        """
+        helper function converts a numeric coordinate to an algebraic coordinate
+        :param num_coord: in tuple format ie (1, 2)
+        :return: the string with algebraic ie 'b1' coordinates
+        """
+        columns = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
+        columns_dict = dict()
+        # make dictionary where key = number (index) val = "letter"
+        for index, letter in enumerate(columns):
+            columns_dict[index] = letter
+        alg_str = ""
+        row_index = num_coord[0]
+        col_index = num_coord[1]
+        row_index += 1
+        alg_str += columns_dict[col_index]
+        alg_str += str(row_index)
+        return alg_str
+
+    def invert_coordinates(self, tup_list):
+        """
+        helper function inverts a list of coordinates (tuples) across the Janggi board.
+        Returns: None
+        """
+        inverted_list = list()
+        for coord in tup_list:
+            row = coord[0]
+            col = coord[1]
+            inverted_coord = (9 - row, col)
+            inverted_list.append(inverted_coord)  # add inverted coord
+        tup_list.clear()
+        tup_list.extend(inverted_list)
 
     def list_format(self, alist):
         """
@@ -316,7 +197,7 @@ class JanggiGame:
         :param alg_coord: in string format ie 'b1'
         :return: the object in the square (or None)
         """
-        row_index, col_index = algebraic_to_numeric(alg_coord)
+        row_index, col_index = self.algebraic_to_numeric(alg_coord)
         board = self.get_board()
         return board[row_index][col_index]
 
@@ -324,9 +205,111 @@ class JanggiGame:
         """
         For debugging/testing, overrides a square on the board with a given Piece
         """
-        row_index, col_index = algebraic_to_numeric(alg_coord)
+        row_index, col_index = self.algebraic_to_numeric(alg_coord)
         board = self.get_board()
         board[row_index][col_index] = piece_obj
+
+    def get_general(self, color):
+        """
+        helper function returns the General object found on the board
+        with a specified color
+        """
+        general_name = color + "Gn"
+        board = self.get_board()
+        # iterate through all pieces on the game board
+        for row in board:
+            for piece_obj in row:
+                # if not empty...
+                if piece_obj is not None:
+                    # if general, return general
+                    if general_name in piece_obj.get_name():
+                        return piece_obj
+
+    def all_player_moves(self, color):
+        """
+        helper function returns a large list of all the possible moves a player (color)
+        can make with their current set of pieces on the game board
+        """
+        all_valid_moves = list()
+        board = self.get_board()
+        # iterate through all pieces on the game board
+        for row in board:
+            for piece_obj in row:
+                # if not empty...
+                if piece_obj is not None:
+                    # if color
+                    if color in piece_obj.get_name():
+                        # get the valid moves and add them to the enemy list
+                        all_valid_moves.extend(piece_obj.get_valid_moves())
+        return all_valid_moves
+
+    def get_enemies_causing_check(self, color):
+        """
+        helper function returns a list of algebraic positions of the enemies
+        that are causing the friendly player to be in check
+        """
+        # initialize colors
+        friendly_color = None
+        enemy_color = None
+        if color == "b":
+            friendly_color = "b"
+            enemy_color = "r"
+        elif color == "r":
+            friendly_color = "r"
+            enemy_color = "b"
+
+        # get the friendly general
+        general_obj = self.get_general(friendly_color)
+        # get the general's position
+        general_pos = general_obj.get_numeric_position()
+
+        # create a list of enemy squares that are causing check
+        enemies_causing_check = list()
+        board = self.get_board()
+        # iterate through all pieces on the game board
+        for row in board:
+            for piece_obj in row:
+                # if not empty...
+                if piece_obj is not None:
+                    # if enemy piece
+                    if enemy_color in piece_obj.get_name():
+                        # if that piece is causing check
+                        if general_pos in piece_obj.get_valid_moves():
+                            # add the position to enemies causing check
+                            enemies_causing_check.append(piece_obj.get_position())
+        return enemies_causing_check
+
+    def is_in_check(self, color):
+        """
+        Takes a color for the player in question.
+        Call get_valid_moves()) on every one of the enemy player's remaining pieces,
+        to create a large list of all possible next moves.
+        If the friendly General's position is in this list of enemy_valid_moves (able to be captured),
+        they are in check, return True.
+        Otherwise, return False.
+        """
+        # initialize colors
+        friendly_color = None
+        enemy_color = None
+        if color == "blue":
+            friendly_color = "b"
+            enemy_color = "r"
+        elif color == "red":
+            friendly_color = "r"
+            enemy_color = "b"
+
+        # get all the enemy's valid moves
+        enemy_valid_moves = self.all_player_moves(enemy_color)
+        # get the friendly general
+        general_obj = self.get_general(friendly_color)
+        # get the general's position
+        general_pos = general_obj.get_numeric_position()
+
+        # if the general's position can be captured by the opposite player
+        if general_pos in enemy_valid_moves:
+            return True
+        else:
+            return False
 
     def hypothetical_move(self, start, end):
         """
@@ -394,6 +377,7 @@ class JanggiGame:
         :return: True if valid move, False otherwise
         """
         # for debugging gradescope
+        print(self.get_game_state())
         print(f"Attempting: {start} -> {end}")
 
         # first check for a valid pass move
@@ -410,7 +394,7 @@ class JanggiGame:
             return False
         if self.get_game_state() != "UNFINISHED":       # invalid move if game is finished
             return False
-        end_tup = algebraic_to_numeric(end)
+        end_tup = self.algebraic_to_numeric(end)
         if end_tup not in piece_obj.get_valid_moves():  # invalid if end position is not valid for this piece
             return False
 
@@ -456,7 +440,7 @@ class JanggiGame:
                     return False
 
         # otherwise, VALID MOVE
-        start_tup = algebraic_to_numeric(start)
+        start_tup = self.algebraic_to_numeric(start)
         start_row, start_col = start_tup
         end_row, end_col = end_tup              # unpack end square tup
         board = self.get_board()                # get board
@@ -476,7 +460,7 @@ class JanggiGame:
             enemy_general_pos = enemy_general.get_position()
             for move in enemy_general.get_valid_moves():
                 # try a hypothetical move
-                potential_move_pos = numeric_to_algebraic(move)
+                potential_move_pos = self.numeric_to_algebraic(move)
                 if self.hypothetical_move(enemy_general_pos, potential_move_pos):
                     checkmate = False       # if a general can hypothetically move, not in checkmate
 
@@ -513,7 +497,7 @@ class Piece:
         numeric position (tuple) and returns it
         """
         algebraic_pos = self.get_position()
-        numeric_pos = algebraic_to_numeric(algebraic_pos)
+        numeric_pos = self._game.algebraic_to_numeric(algebraic_pos)
         return numeric_pos
 
     def set_position(self, alg_coord):
@@ -593,9 +577,8 @@ class Chariot(Piece):
         :param direction: either 'right', 'left', 'down', or 'up'
         :returns: orthogonal_moves
         """
-        algebraic_pos = self.get_position()
-        numeric_pos = algebraic_to_numeric(algebraic_pos)
-        row_index, col_index = numeric_pos
+        chariot_pos = self.get_numeric_position()
+        row_index, col_index = chariot_pos
 
         step = None
         next_row = None
@@ -639,8 +622,7 @@ class Chariot(Piece):
 
     def fortress_moves(self):
         """helper function returns a list of possible moves a Chariot can make in a fortress"""
-        algebraic_pos = self.get_position()
-        chariot_pos = algebraic_to_numeric(algebraic_pos)
+        chariot_pos = self.get_numeric_position()
         row_index, col_index = chariot_pos
 
         # initialize to blue fortress
@@ -651,9 +633,9 @@ class Chariot(Piece):
 
         # if the chariot is not in the blue fortress, invert to red fortress coordinates
         if chariot_pos not in blue_fortress:
-            invert_coordinates(fortress)
-            invert_coordinates(fort_corners)
-            invert_coordinates(fort_center)
+            self._game.invert_coordinates(fortress)
+            self._game.invert_coordinates(fort_corners)
+            self._game.invert_coordinates(fort_center)
 
         potential_moves = list()
         # if chariot is in the center or a corner, can move one square diagonally
@@ -664,7 +646,7 @@ class Chariot(Piece):
             potential_moves.append((row_index - 1, col_index - 1))  # diagonal 1 up/left
 
         # if chariot is in a fortress corner, and if the center is empty, can move two squares diagonally
-        alg_center = numeric_to_algebraic(fort_center[0])
+        alg_center = self._game.numeric_to_algebraic(fort_center[0])
         center_obj = self._game.get_square_contents(alg_center)
         if chariot_pos in fort_corners and center_obj is None:
             potential_moves.append((row_index + 2, col_index + 2))  # diagonal 2 down/right
@@ -729,9 +711,8 @@ class Elephant(Piece):
         :param direction: either 'right', 'left', 'down', or 'up'
         :returns: diagonal_moves
         """
-        algebraic_pos = self.get_position()
-        numeric_pos = algebraic_to_numeric(algebraic_pos)
-        row_index, col_index = numeric_pos
+        elephant_pos = self.get_numeric_position()
+        row_index, col_index = elephant_pos
 
         step = None
         next_row = None
@@ -754,7 +735,7 @@ class Elephant(Piece):
         diagonal_moves = list()
         if self.on_game_board((next_row, next_column)):  # if in bounds
             ortho_square = (next_row, next_column)
-            ortho_square_alg = numeric_to_algebraic(ortho_square)
+            ortho_square_alg = self._game.numeric_to_algebraic(ortho_square)
             ortho_obj = self._game.get_square_contents(ortho_square_alg)
             if ortho_obj is None:  # if orthogonal square is not blocked
                 # make two lists for possible diagonals 1 square away and
@@ -769,12 +750,12 @@ class Elephant(Piece):
                     second_diagonals = [(next_row+2, next_column+step+step), (next_row-2, next_column+step+step)]
                 # iterate only through the first diagonals that are on the game board
                 for first_diag in self.remove_out_of_bounds(first_diagonals):
-                    first_diag_alg = numeric_to_algebraic(first_diag)
+                    first_diag_alg = self._game.numeric_to_algebraic(first_diag)
                     first_diag_obj = self._game.get_square_contents(first_diag_alg)
                     if first_diag_obj is None:  # if empty (clear)
                         # iterate through second diagonals that are on the board
                         for second_diag in self.remove_out_of_bounds(second_diagonals):
-                            second_diag_alg = numeric_to_algebraic(second_diag)
+                            second_diag_alg = self._game.numeric_to_algebraic(second_diag)
                             second_diag_obj = self._game.get_square_contents(second_diag_alg)
                             if second_diag_obj is None or second_diag_obj.get_color() != self.get_color():
                                 # if empty or enemy, add to valid moves
@@ -820,9 +801,8 @@ class Horse(Piece):
         :param direction: either 'right', 'left', 'down', or 'up'
         :returns: diagonal_moves
         """
-        algebraic_pos = self.get_position()
-        numeric_pos = algebraic_to_numeric(algebraic_pos)
-        row_index, col_index = numeric_pos
+        horse_pos = self.get_numeric_position()
+        row_index, col_index = horse_pos
 
         step = None
         next_row = None
@@ -845,7 +825,7 @@ class Horse(Piece):
         diagonal_moves = list()
         if self.on_game_board((next_row, next_column)):  # if in bounds
             ortho_square = (next_row, next_column)
-            ortho_square_alg = numeric_to_algebraic(ortho_square)
+            ortho_square_alg = self._game.numeric_to_algebraic(ortho_square)
             ortho_obj = self._game.get_square_contents(ortho_square_alg)
             if ortho_obj is None:  # if orthogonal square is not blocked
                 # make list of 2 possible diagonals (depending on direction)
@@ -856,7 +836,7 @@ class Horse(Piece):
                     diagonals = [(next_row+1, next_column+step), (next_row-1, next_column+step)]
                 # iterate only through the diagonals that are on the game board
                 for diagonal in self.remove_out_of_bounds(diagonals):
-                    diagonal_alg = numeric_to_algebraic(diagonal)
+                    diagonal_alg = self._game.numeric_to_algebraic(diagonal)
                     diagonal_obj = self._game.get_square_contents(diagonal_alg)
                     if diagonal_obj is None or diagonal_obj.get_color() != self.get_color():  # if empty or enemy
                         diagonal_moves.append(diagonal)  # add coordinate to valid moves
@@ -895,8 +875,7 @@ class Guard(Piece):
         returns a list of valid moves for the Guard based on the current position,
         uses helper functions remove_same_color for moves blocked by friendly pieces
         """
-        algebraic_pos = self.get_position()
-        guard_pos = algebraic_to_numeric(algebraic_pos)
+        guard_pos = self.get_numeric_position()
         row_index, col_index = guard_pos
 
         # initialize to blue fortress
@@ -907,9 +886,9 @@ class Guard(Piece):
 
         # if the guard is not in the blue fortress, invert to red fortress coordinates
         if guard_pos not in blue_fortress:
-            invert_coordinates(fortress)
-            invert_coordinates(fort_corners)
-            invert_coordinates(fort_center)
+            self._game.invert_coordinates(fortress)
+            self._game.invert_coordinates(fort_corners)
+            self._game.invert_coordinates(fort_center)
 
         guard_moves = list()
         # all positions in the fortress can move up/down or left/right (within the fortress)
@@ -953,10 +932,9 @@ class General(Piece):
         """
         returns a list of valid moves for the General based on the current position,
         uses helper functions remove_same_color for moves blocked by friendly pieces
-        and invert_coordinates for red vs blue Generals
+        and invert_coordinates from the game class for red vs blue Generals
         """
-        algebraic_pos = self.get_position()
-        gen_pos = algebraic_to_numeric(algebraic_pos)
+        gen_pos = self.get_numeric_position()
         row_index, col_index = gen_pos
 
         # initialize to blue fortress
@@ -967,9 +945,9 @@ class General(Piece):
 
         # if the general is not in the blue fortress, invert to red fortress coordinates
         if gen_pos not in blue_fortress:
-            invert_coordinates(fortress)
-            invert_coordinates(fort_corners)
-            invert_coordinates(fort_center)
+            self._game.invert_coordinates(fortress)
+            self._game.invert_coordinates(fort_corners)
+            self._game.invert_coordinates(fort_center)
 
         gen_moves = list()
         # all positions in the fortress can move up/down or left/right (within the fortress)
@@ -1024,9 +1002,8 @@ class Cannon(Piece):
         :param direction: either 'right', 'left', 'down', or 'up'
         :returns: orthogonal_moves
         """
-        algebraic_pos = self.get_position()
-        numeric_pos = algebraic_to_numeric(algebraic_pos)
-        row_index, col_index = numeric_pos
+        cannon_pos = self.get_numeric_position()
+        row_index, col_index = cannon_pos
 
         step = None
         next_row = None
@@ -1091,8 +1068,7 @@ class Cannon(Piece):
 
     def fortress_moves(self):
         """helper function returns a list of possible moves a Cannon can make in a fortress"""
-        algebraic_pos = self.get_position()
-        cannon_pos = algebraic_to_numeric(algebraic_pos)
+        cannon_pos = self.get_numeric_position()
         row_index, col_index = cannon_pos
 
         # initialize to blue fortress
@@ -1103,12 +1079,12 @@ class Cannon(Piece):
 
         # if the cannon is not in the blue fortress, invert to red fortress coordinates
         if cannon_pos not in blue_fortress:
-            invert_coordinates(fortress)
-            invert_coordinates(fort_corners)
-            invert_coordinates(fort_center)
+            self._game.invert_coordinates(fortress)
+            self._game.invert_coordinates(fort_corners)
+            self._game.invert_coordinates(fort_center)
 
         # get the object in the fortress center (either a Piece or None)
-        fort_center_alg = numeric_to_algebraic(fort_center[0])
+        fort_center_alg = self._game.numeric_to_algebraic(fort_center[0])
         fort_center_obj = self._game.get_square_contents(fort_center_alg)
 
         potential_moves = list()
@@ -1131,7 +1107,7 @@ class Cannon(Piece):
         valid_fortress_moves = list()
         for square in fortress_moves:
             # get object found at each square (either Piece or None)
-            square_alg = numeric_to_algebraic(square)
+            square_alg = self._game.numeric_to_algebraic(square)
             square_obj = self._game.get_square_contents(square_alg)
             # if empty, valid move
             if square_obj is None:
@@ -1174,10 +1150,9 @@ class Soldier(Piece):
         """
         returns a list of valid moves for the Soldier based on the current position,
         uses helper functions remove_out_of_bounds, remove_same_color for moves blocked
-        by friendly pieces, and invert_coordinates for red vs blue Soldiers
+        by friendly pieces, and invert_coordinates from the game class for red vs blue Soldiers
         """
-        algebraic_pos = self.get_position()
-        sold_pos = algebraic_to_numeric(algebraic_pos)
+        sold_pos = self.get_numeric_position()
         row_index, col_index = sold_pos      # unpack tuple
 
         # initialize to blue fortress
@@ -1188,9 +1163,9 @@ class Soldier(Piece):
 
         # if soldier is not in blue fortress, invert to red fortress coordinates
         if sold_pos not in blue_fortress:
-            invert_coordinates(fort_inner_corners)
-            invert_coordinates(fort_outer_corners)
-            invert_coordinates(fort_center)
+            self._game.invert_coordinates(fort_inner_corners)
+            self._game.invert_coordinates(fort_outer_corners)
+            self._game.invert_coordinates(fort_center)
 
         # if soldier is red, vertical direction is positive (move down game board),
         # if soldier is blue, vertical direction is negative (move up game board)
@@ -1274,8 +1249,8 @@ def main():
     game.make_move('e2', 'e2')
     # checkmate
     print(game.make_move('e4', 'e3'))
-    game.display_board()
     print(game.get_game_state())
+    game.display_board()
 
 
 if __name__ == "__main__":
