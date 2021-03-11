@@ -348,7 +348,7 @@ class JanggiGame:
         Checks the validity of a move, uses get_valid_moves() from the Piece class instance
         found at the start square.
             Note:       each piece has a valid pass move in its set of valid moves.
-                        it is treated like any other move.
+                        it is treated like any other move, but won't remove the piece.
             Invalid if: start square is empty (None), not the starting square's turn,
                         game is finished, end square is not in the valid moves of the
                         Piece instance from the start square, the hypothetical move
@@ -401,6 +401,12 @@ class JanggiGame:
         if self.is_in_check(current_color_for_check):
             if self.hypothetical_move(start, end) is False:
                 return False
+
+        #  If the valid move is a pass move (and it hasn't put or left the player in check),
+        #  simply update turn and return True
+        if start == end:
+            self.update_turn()
+            return True
 
         # otherwise, VALID MOVE
         start_tup = self.algebraic_to_numeric(start)
