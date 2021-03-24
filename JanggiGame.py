@@ -19,6 +19,10 @@
 #               moved as part of its validation, so it is important that each child of the Piece class
 #               has a get_valid_moves() method that is specific to that Piece's move set.
 
+import pygame
+import os
+
+
 class JanggiGame:
     """Represents a game of Janggi"""
     def __init__(self):
@@ -70,6 +74,65 @@ class JanggiGame:
                     piece_obj.set_position(alg_coord)                   # set the position
                 col_index += 1
             row_index += 1
+
+    def get_pixel_coordinates(self):
+        """
+        helper function returns a dictionary with key = algebraic position
+        and val = pixel coordinate for the GUI
+        """
+        # loop to get pixel coordinates for each algebraic position
+        letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
+        pixel_dict = dict()
+        y_coord = 38
+        for i in range(1, 11):
+            x_coord = 38
+            for letter in letters:
+                alg_coord = letter + str(i)
+                if x_coord <= 638:
+                    pixel_dict[alg_coord] = (x_coord, y_coord)
+                x_coord += 75
+            y_coord += 75
+        return pixel_dict
+
+    def display_board_gui(self):
+        """
+        helper function uses pygame to display a GUI with a game board and
+        game pieces for the current state
+        """
+        # initialize pygame module
+        pygame.init()
+        # set caption
+        pygame.display.set_caption("Janggi")
+        # create a surface on screen that is 675 x 750
+        screen = pygame.display.set_mode((675, 750))
+        # load a background board image, blit to screen
+        bgd_image = pygame.image.load(os.path.join("assets", "JanggiWood.svg"))
+        screen.blit(bgd_image, (0, 0))
+
+        # blit each game piece image here!!!!
+        pixel_dict = self.get_pixel_coordinates()
+        board = self.get_board()
+        for row in board:
+            for piece_obj in row:
+                if piece_obj is not None:
+                    # get the piece's position, image and associated rectangle
+                    pos = piece_obj.get_position()
+                    image = piece_obj.get_image()
+                    rect = image.get_rect()
+                    # set rectangle center to pixel position
+                    rect.center = pixel_dict[pos]
+                    # blit image to screen using rectangle's top left coordinate
+                    screen.blit(image, rect.topleft)
+
+        # refresh screen
+        pygame.display.flip()
+        # initialize boolean to control main loop
+        running = True
+        # main loop
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
 
     def get_blue_fortress(self):
         """getter for blue fortress coordinates"""
@@ -532,6 +595,12 @@ class Chariot(Piece):
     def __init__(self, game_class, color):
         super().__init__(game_class, color)
         self._name = color + "Ch"
+        filename = self._name + ".svg"
+        self._image = pygame.image.load(os.path.join("assets", filename))
+
+    def get_image(self):
+        """getter for image"""
+        return self._image
 
     def get_name(self):
         """getter for name"""
@@ -669,6 +738,12 @@ class Elephant(Piece):
     def __init__(self, game_class, color):
         super().__init__(game_class, color)
         self._name = color + "El"
+        filename = self._name + ".svg"
+        self._image = pygame.image.load(os.path.join("assets", filename))
+
+    def get_image(self):
+        """getter for image"""
+        return self._image
 
     def get_name(self):
         """getter for name"""
@@ -764,6 +839,12 @@ class Horse(Piece):
     def __init__(self, game_class, color):
         super().__init__(game_class, color)
         self._name = color + "Hs"
+        filename = self._name + ".svg"
+        self._image = pygame.image.load(os.path.join("assets", filename))
+
+    def get_image(self):
+        """getter for image"""
+        return self._image
 
     def get_name(self):
         """getter for name"""
@@ -847,6 +928,12 @@ class Guard(Piece):
     def __init__(self, game_class, color):
         super().__init__(game_class, color)
         self._name = color + "Gd"
+        filename = self._name + ".svg"
+        self._image = pygame.image.load(os.path.join("assets", filename))
+
+    def get_image(self):
+        """getter for image"""
+        return self._image
 
     def get_name(self):
         """getter for name"""
@@ -911,6 +998,12 @@ class General(Piece):
     def __init__(self, game_class, color):
         super().__init__(game_class, color)
         self._name = color + "Gn"
+        filename = self._name + ".svg"
+        self._image = pygame.image.load(os.path.join("assets", filename))
+
+    def get_image(self):
+        """getter for image"""
+        return self._image
 
     def get_name(self):
         """getter for name"""
@@ -978,6 +1071,12 @@ class Cannon(Piece):
     def __init__(self, game_class, color):
         super().__init__(game_class, color)
         self._name = color + "Cn"
+        filename = self._name + ".svg"
+        self._image = pygame.image.load(os.path.join("assets", filename))
+
+    def get_image(self):
+        """getter for image"""
+        return self._image
 
     def get_name(self):
         """getter for name"""
@@ -1134,6 +1233,12 @@ class Soldier(Piece):
     def __init__(self, game_class, color):
         super().__init__(game_class, color)
         self._name = color + "Sd"
+        filename = self._name + ".svg"
+        self._image = pygame.image.load(os.path.join("assets", filename))
+
+    def get_image(self):
+        """getter for image"""
+        return self._image
 
     def get_name(self):
         """getter for name"""
@@ -1193,101 +1298,8 @@ class Soldier(Piece):
 
 # test move sequences below
 def main():
-    # full game sequence test, cannon removes red check along the way
     game = JanggiGame()
-    print(game.is_in_check('red'))
-    print(game.is_in_check('blue'))
-    game.make_move('a7', 'b7')
-    game.make_move('i4', 'h4')
-    game.make_move('h10', 'g8')
-    game.make_move('c1', 'd3')
-    game.make_move('h8', 'e8')
-    game.make_move('i1', 'i2')
-    game.make_move('e7', 'f7')
-    print(game.is_in_check('red'))
-    print(game.is_in_check('blue'))
-    game.make_move('b3', 'e3')
-    print(game.is_in_check('red'))
-    print(game.is_in_check('blue'))
-    game.make_move('g10', 'e7')
-    game.make_move('e4', 'd4')
-    game.make_move('c10', 'd8')
-    game.make_move('g1', 'e4')
-    game.make_move('f10', 'f9')
-    game.make_move('h1', 'g3')
-    game.make_move('a10', 'a6')
-    game.make_move('d4', 'd5')
-    game.make_move('e9', 'f10')
-    game.make_move('h3', 'f3')
-    game.make_move('e8', 'h8')
-    game.make_move('i2', 'h2')
-    game.make_move('h8', 'f8')
-    game.make_move('f1', 'f2')
-    game.make_move('b8', 'e8')
-    game.make_move('f3', 'f1')
-    game.make_move('i7', 'h7')
-    game.make_move('f1', 'c1')
-    game.make_move('d10', 'e9')
-    game.make_move('a4', 'b4')
-    game.make_move('a6', 'a1')
-    game.make_move('c1', 'a1')
-    game.make_move('f8', 'd10')
-    game.make_move('d5', 'c5')
-    game.make_move('i10', 'i6')
-    game.make_move('b1', 'd4')
-    game.make_move('c7', 'c6')
-    game.make_move('c5', 'b5')
-    game.make_move('b10', 'd7')
-    game.make_move('d4', 'f7')
-    game.make_move('g7', 'f7')
-    game.make_move('a1', 'f1')
-    game.make_move('g8', 'f6')
-    game.make_move('f1', 'f5')
-    game.make_move('f6', 'd5')
-    game.make_move('e3', 'e5')
-    game.make_move('f7', 'f6')
-    game.make_move('f5', 'f7')
-    print(game.is_in_check('red'))
-    print(game.is_in_check('blue'))
-    game.make_move('f10', 'e10')
-    print(game.is_in_check('red'))
-    print(game.is_in_check('blue'))
-    game.make_move('e2', 'f1')
-    game.make_move('i6', 'i3')
-    game.make_move('h2', 'g2')
-    game.make_move('i3', 'i1')
-    print(game.is_in_check('red'))
-    print(game.is_in_check('blue'))
-    game.make_move('f1', 'e2')
-    print(game.is_in_check('red'))
-    print(game.is_in_check('blue'))
-    game.make_move('f6', 'f5')
-    game.make_move('c4', 'd4')
-    game.make_move('f5', 'e5')
-    game.make_move('f7', 'd7')
-    game.make_move('e7', 'g4')
-    game.make_move('d4', 'd5')
-    game.make_move('e5', 'e4')
-    game.make_move('d3', 'e5')
-    game.make_move('e4', 'e3')
-    print(game.is_in_check('red'))
-    print(game.is_in_check('blue'))
-    game.make_move('e2', 'd2')
-    print(game.is_in_check('red'))
-    print(game.is_in_check('blue'))
-    game.make_move('e3', 'e2')
-    print(game.is_in_check('red'))
-    print(game.is_in_check('blue'))
-    print(game.make_move('d2', 'd3'))  # this move should get red out of check
-    print(game.is_in_check('red'))
-    print(game.is_in_check('blue'))
-    game.make_move('e8', 'e4')
-    game.make_move('f2', 'e2')
-    game.make_move('i1', 'd1')
-    game.make_move('e2', 'd2')
-    print(game.make_move('d1', 'f3'))
-    print(game.get_game_state())
-    game.display_board()
+    game.display_board_gui()
 
 
 if __name__ == "__main__":
