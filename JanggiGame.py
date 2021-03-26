@@ -75,65 +75,6 @@ class JanggiGame:
                 col_index += 1
             row_index += 1
 
-    def get_pixel_coordinates(self):
-        """
-        helper function returns a dictionary with key = algebraic position
-        and val = pixel coordinate for the GUI
-        """
-        # loop to get pixel coordinates for each algebraic position
-        letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
-        pixel_dict = dict()
-        y_coord = 38
-        for i in range(1, 11):
-            x_coord = 38
-            for letter in letters:
-                alg_coord = letter + str(i)
-                if x_coord <= 638:
-                    pixel_dict[alg_coord] = (x_coord, y_coord)
-                x_coord += 75
-            y_coord += 75
-        return pixel_dict
-
-    def display_board_gui(self):
-        """
-        helper function uses pygame to display a GUI with a game board and
-        game pieces for the current state
-        """
-        # initialize pygame module
-        pygame.init()
-        # set caption
-        pygame.display.set_caption("Janggi")
-        # create a surface on screen that is 675 x 750
-        screen = pygame.display.set_mode((675, 750))
-        # load a background board image, blit to screen
-        bgd_image = pygame.image.load(os.path.join("assets", "JanggiWood.svg"))
-        screen.blit(bgd_image, (0, 0))
-
-        # blit each game piece image here!!!!
-        pixel_dict = self.get_pixel_coordinates()
-        board = self.get_board()
-        for row in board:
-            for piece_obj in row:
-                if piece_obj is not None:
-                    # get the piece's position, image and associated rectangle
-                    pos = piece_obj.get_position()
-                    image = piece_obj.get_image()
-                    rect = image.get_rect()
-                    # set rectangle center to pixel position
-                    rect.center = pixel_dict[pos]
-                    # blit image to screen using rectangle's top left coordinate
-                    screen.blit(image, rect.topleft)
-
-        # refresh screen
-        pygame.display.flip()
-        # initialize boolean to control main loop
-        running = True
-        # main loop
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-
     def get_blue_fortress(self):
         """getter for blue fortress coordinates"""
         return self._b_fortress
@@ -1299,7 +1240,8 @@ class Soldier(Piece):
 # test move sequences below
 def main():
     game = JanggiGame()
-    game.display_board_gui()
+    game.make_move("a7", "b7")
+    game.display_board()
 
 
 if __name__ == "__main__":
