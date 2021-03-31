@@ -43,19 +43,19 @@ def get_board_rectangles():
     return board_rectangles
 
 
-def get_letter_images():
+def get_string_images(list_of_strings):
     """
-    helper functions returns a dictionary with key = letter,
+    helper functions takes a list of strings and returns a
+    dictionary with key = letter,
     val = pygame Surface object
     """
-    letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
     image_dict = dict()
     pygame.init()
     font = pygame.font.SysFont("timesnewroman", 30)
-    for letter in letters:
+    for a_string in list_of_strings:
         black = (0, 0, 0)
-        img = font.render(letter.upper(), 1, black)
-        image_dict[letter] = img
+        img = font.render(a_string.upper(), 1, black)
+        image_dict[a_string] = img
     return image_dict
 
 
@@ -71,7 +71,8 @@ def blit_current_board(game, screen):
     screen.blit(bgd_image, (45, 50))
 
     # blit each column header here
-    letter_images = get_letter_images()
+    letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
+    letter_images = get_string_images(letters)
     x_coord = 33 + 45
     y_coord = 25
     for img in letter_images.values():
@@ -79,6 +80,28 @@ def blit_current_board(game, screen):
         rect.center = (x_coord, y_coord)
         screen.blit(img, rect.topleft)
         x_coord += 66
+
+    # blit each row number along left side here
+    numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+    number_images = get_string_images(numbers)
+    x_coord = 25
+    y_coord = 33 + 45
+    for img in number_images.values():
+        rect = img.get_rect()
+        rect.center = (x_coord, y_coord)
+        screen.blit(img, rect.topleft)
+        y_coord += 66
+
+    # blit each row number along right side here
+    numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+    number_images = get_string_images(numbers)
+    x_coord = 684 - 25
+    y_coord = 33 + 45
+    for img in number_images.values():
+        rect = img.get_rect()
+        rect.center = (x_coord, y_coord)
+        screen.blit(img, rect.topleft)
+        y_coord += 66
 
     # blit each game piece image here!!!!
     pixel_dict = get_pixel_coordinates()
