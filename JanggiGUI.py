@@ -124,13 +124,119 @@ def blit_current_board(game, screen):
     else:
         color = "red"
     pygame.draw.circle(screen, color, (342, 731), 10)
+
     # refresh display
     pygame.display.flip()
+
+
+def blit_ending_message(game, screen):
+    """
+    helper function takes the current instance of the JanggiGame class
+    and the current pygame screen, then blits a rectangle declaring
+    the winner to the center of the screen
+    """
+    # draw a grey rectangle in the center of the screen
+    cx, cy = 342, 380
+    my_rect = pygame.Rect(0, 0, 400, 200)
+    my_rect.center = cx, cy
+    pygame.draw.rect(screen, "grey", my_rect)
+
+    # get winning color
+    if game.get_game_state() == "BLUE_WON":
+        color = "blue"
+    else:
+        color = "red"
+
+    # create image for ending message, blit to screen
+    font = pygame.font.SysFont("timesnewroman", 30)
+    win_str = f"CHECKMATE, {color.upper()} WINS!"
+    win_img = font.render(win_str, 1, color)
+    rect = win_img.get_rect()
+    rect.center = cx, cy
+    screen.blit(win_img, rect.topleft)
+
+    # refresh display
+    pygame.display.flip()
+
+
+def blit_invalid_move(screen):
+    """
+    helper function takes the current pygame screen object and blits
+    an invalid move message to the bottom corner
+    """
+    # create image for ending message, blit to screen
+    font = pygame.font.SysFont("timesnewroman", 20)
+    invalid_str = "Invalid move, try again!"
+    black = 0, 0, 0
+    invalid_img = font.render(invalid_str, 1, black)
+    rect = invalid_img.get_rect()
+    rect.center = 145, 731
+    screen.blit(invalid_img, rect.topleft)
+    # refresh display
+    pygame.display.flip()
+
+
+def perform_set_of_moves(game):
+    game.make_move('e7', 'e6')
+    game.make_move('e2', 'e2')
+    game.make_move('e6', 'e5')
+    game.make_move('e2', 'e2')
+    game.make_move('e5', 'e4')
+    game.make_move('e2', 'e2')
+    game.make_move('e4', 'd4')
+    game.make_move('e2', 'e2')
+    game.make_move('d4', 'c4')
+    game.make_move('e2', 'e2')
+    game.make_move('a10', 'a9')
+    game.make_move('e2', 'e2')
+    game.make_move('a9', 'd9')
+    game.make_move('e2', 'e2')
+    game.make_move('d9', 'd8')
+    game.make_move('e2', 'e2')
+    game.make_move('d8', 'd7')
+    game.make_move('e2', 'e2')
+    game.make_move('d7', 'd6')
+    game.make_move('i1', 'i2')
+    game.make_move('e9', 'e9')
+    game.make_move('i2', 'g2')
+    game.make_move('e9', 'e9')
+    game.make_move('i4', 'h4')
+    game.make_move('e9', 'e9')
+    game.make_move('h3', 'h5')
+    game.make_move('i10', 'i9')
+    game.make_move('e2', 'e2')
+    game.make_move('i9', 'g9')
+    game.make_move('e2', 'e2')
+    game.make_move('g9', 'g8')
+    game.make_move('e2', 'e2')
+    game.make_move('h8', 'f8')
+    game.make_move('f1', 'e1')
+    game.make_move('g7', 'f7')
+    game.make_move('e2', 'e2')
+    game.make_move('i7', 'i6')
+    game.make_move('e2', 'e2')
+    game.make_move('g10', 'i7')
+    game.make_move('e2', 'e2')
+    game.make_move('i7', 'f5')
+    game.make_move('e2', 'e2')
+    game.make_move('f5', 'd8')
+    game.make_move('e2', 'e2')
+    game.make_move('d8', 'b5')
+    game.make_move('e2', 'e2')
+    game.make_move('c4', 'd4')
+    game.make_move('e2', 'e2')
+    game.make_move('d4', 'e4')
+    game.make_move('e2', 'e2')
+    #game.make_move('e4', 'e3')  # checkmate
 
 
 def main():
     # create a Janggi Game instance
     game = JanggiGame()
+
+    # if desired, perform a predetermined set of moves here
+    perform_set_of_moves(game)
+
     # initialize pygame module
     pygame.init()
     # set caption
@@ -144,6 +250,7 @@ def main():
     # create a dictionary of coordinates/rectangles for each game square
     # blit each one to the screen for now to debug
     board_rectangles = get_board_rectangles()
+    # FOR DEBUGGING: prints all board rectangles for visualization
     #for alg_coord, my_rect in board_rectangles.items():
     #    pygame.draw.rect(screen, "blue", my_rect)
 
@@ -152,6 +259,7 @@ def main():
     # initialize start and end for click detection
     start = None
     end = None
+    valid_move = None
     # main loop
     while running:
         for event in pygame.event.get():
@@ -165,17 +273,27 @@ def main():
                             if start is None and end is None:   # if first collision, set start
                                 start = alg_coord
                                 print(f"A starting rectangle was clicked! {start}")
+                                # if previous move was invalid, reset screen after first new click
+                                if not valid_move:
+                                    blit_current_board(game, screen)
                             elif start is not None and end is None:     # if second collision, set end
                                 end = alg_coord
                                 print(f"An ending rectangle was clicked! {end}")
             # make move inside loop
             if start is not None and end is not None:
-                game.make_move(start, end)
+                # make move and assign the validity
+                valid_move = game.make_move(start, end)
                 # update display
                 blit_current_board(game, screen)
+                if not valid_move:
+                    # display invalid move prompt
+                    blit_invalid_move(screen)
                 # reset start and end for next turn, continue loop
                 start = None
                 end = None
+            # if game is finished, display winner and end
+            if game.get_game_state() != "UNFINISHED":
+                blit_ending_message(game, screen)
 
 
 if __name__ == "__main__":
