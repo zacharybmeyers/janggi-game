@@ -250,7 +250,7 @@ def main():
     game = JanggiGame()
 
     # if desired, perform a predetermined set of moves here
-    perform_set_of_moves(game)
+    # perform_set_of_moves(game)
 
     # initialize pygame module
     pygame.init()
@@ -287,13 +287,15 @@ def main():
                         if my_rect.collidepoint(event.pos):
                             if start is None and end is None:   # if first collision, set start
                                 start = alg_coord
-                                print(f"A starting rectangle was clicked! {start}")
+                                # DEBUG:
+                                # print(f"A starting rectangle was clicked! {start}")
                                 # if previous move was invalid, reset screen after first new click
                                 if not valid_move:
                                     blit_current_board(game, screen)
                             elif start is not None and end is None:     # if second collision, set end
                                 end = alg_coord
-                                print(f"An ending rectangle was clicked! {end}")
+                                # DEBUG:
+                                # print(f"An ending rectangle was clicked! {end}")
             # make move inside loop
             if start is not None and end is not None:
                 # make move and assign the validity
