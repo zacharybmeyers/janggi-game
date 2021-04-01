@@ -1,6 +1,21 @@
 # Author:       Zachary Meyers
 # Date:         2021-03-23
-# Description:
+# Description:  This module creates a simple GUI with pygame for playing a game of Janggi,
+#               and makes use of the logic from the JanggiGame module.
+#               All images used in the assets directory are public domain.
+#               Each child instance of the Piece class in JanggiGame has a data member
+#               pointing to a corresponding piece image in assets.
+#               There are various helper functions that...:
+#                   --determine where to blit game pieces
+#                   --set boundaries (rectangles) for valid mouse clicks
+#                   --create images for desired text to display
+#                   --blit the current state of the game board
+#               The main function has a while loop that...:
+#                   --displays/refreshes the game board
+#                   --makes moves (if valid)
+#                   --displays a message if a move is invalid
+#                   --displays a winning message when the game is finished
+#               The game window is not resizeable.
 
 import pygame
 import os
@@ -54,7 +69,7 @@ def get_string_images(list_of_strings):
     font = pygame.font.SysFont("timesnewroman", 30)
     for a_string in list_of_strings:
         black = (0, 0, 0)
-        img = font.render(a_string.upper(), 1, black)
+        img = font.render(a_string.upper(), True, black)
         image_dict[a_string] = img
     return image_dict
 
@@ -150,7 +165,7 @@ def blit_ending_message(game, screen):
     # create image for ending message, blit to screen
     font = pygame.font.SysFont("timesnewroman", 30)
     win_str = f"CHECKMATE, {color.upper()} WINS!"
-    win_img = font.render(win_str, 1, color)
+    win_img = font.render(win_str, True, color)
     rect = win_img.get_rect()
     rect.center = cx, cy
     screen.blit(win_img, rect.topleft)
@@ -168,7 +183,7 @@ def blit_invalid_move(screen):
     font = pygame.font.SysFont("timesnewroman", 20)
     invalid_str = "Invalid move, try again!"
     black = 0, 0, 0
-    invalid_img = font.render(invalid_str, 1, black)
+    invalid_img = font.render(invalid_str, True, black)
     rect = invalid_img.get_rect()
     rect.center = 145, 731
     screen.blit(invalid_img, rect.topleft)
@@ -227,7 +242,7 @@ def perform_set_of_moves(game):
     game.make_move('e2', 'e2')
     game.make_move('d4', 'e4')
     game.make_move('e2', 'e2')
-    #game.make_move('e4', 'e3')  # checkmate
+    # game.make_move('e4', 'e3')  # checkmate
 
 
 def main():
@@ -251,12 +266,12 @@ def main():
     # blit each one to the screen for now to debug
     board_rectangles = get_board_rectangles()
     # FOR DEBUGGING: prints all board rectangles for visualization
-    #for alg_coord, my_rect in board_rectangles.items():
+    # for alg_coord, my_rect in board_rectangles.items():
     #    pygame.draw.rect(screen, "blue", my_rect)
 
     # initialize boolean to control main loop
     running = True
-    # initialize start and end for click detection
+    # initialize start and end for click detection, valid_move
     start = None
     end = None
     valid_move = None
