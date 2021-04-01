@@ -197,26 +197,6 @@ class JanggiGame:
                 print(num+1, "", self.list_format(row), "", num+1)      # print row 10 as normal
         print("   ", self.list_format(header))                          # print footer (header)
 
-    def play_game(self):
-        """helper function to play the game"""
-        self.display_board()
-        while self.get_game_state() == "UNFINISHED":
-            if self.get_turn() == "b":
-                player = "blue"
-            else:
-                player = "red"
-            print(f"turn: {player}")
-            start = input("start square: ")
-            end = input("end square: ")
-            valid_move = "invalid"
-            if self.make_move(start, end):
-                valid_move = "valid"
-            print(f"move: {valid_move}")
-            self.display_board()
-            keep_playing = input("continue (y/n)? ")
-            if keep_playing == "n":
-                break
-
     def get_square_contents(self, alg_coord):
         """
         Returns whatever is found at the given square's position in the game board
@@ -450,7 +430,7 @@ class JanggiGame:
 class Piece:
     """Represents a Piece for use in the JanggiGame class"""
     def __init__(self, game_class, color):
-        """initializes name, color, and position"""
+        """initializes game, color, and position"""
         self._game = game_class
         self._color = color
         self._position = None
@@ -532,6 +512,8 @@ class Chariot(Piece):
     Move type: as many squares as desired along straight lines of board,
                 or diagonal lines if in the fortress
     Uses super() to initialize the color and receive the JanggiGame class.
+    Creates an 'image' data member: uses 'name' to access the correct .svg from /assets,
+    creates a pygame image for use with JanggiGUI.py
     """
     def __init__(self, game_class, color):
         super().__init__(game_class, color)
@@ -675,6 +657,8 @@ class Elephant(Piece):
     Move type: forward, backward, left, or right one square, then diagonal
                 outward 2 squares. Can be blocked at any point along this path.
     Uses super() to initialize the color and receive the JanggiGame class.
+    Creates an 'image' data member: uses 'name' to access the correct .svg from /assets,
+    creates a pygame image for use with JanggiGUI.py
     """
     def __init__(self, game_class, color):
         super().__init__(game_class, color)
@@ -776,6 +760,8 @@ class Horse(Piece):
     Move type: forward, backward, left, or right one square, then diagonal
                 outward 1 square. Can be blocked at any point along this path.
     Uses super() to initialize the color and receive the JanggiGame class.
+    Creates an 'image' data member: uses 'name' to access the correct .svg from /assets,
+    creates a pygame image for use with JanggiGUI.py
     """
     def __init__(self, game_class, color):
         super().__init__(game_class, color)
@@ -865,6 +851,8 @@ class Guard(Piece):
     Move type: confined to fortress, moves one square oly, or one
                 diagonally if in the center or on a corner
     Uses super() to initialize the color and receive the JanggiGame class.
+    Creates an 'image' data member: uses 'name' to access the correct .svg from /assets,
+    creates a pygame image for use with JanggiGUI.py
     """
     def __init__(self, game_class, color):
         super().__init__(game_class, color)
@@ -935,6 +923,8 @@ class General(Piece):
     Move type: confined to fortress, moves one square orthogonally, or one
                 diagonally if in the center or on a corner
     Uses super() to initialize the color and receive the JanggiGame class.
+    Creates an 'image' data member: uses 'name' to access the correct .svg from /assets,
+    creates a pygame image for use with JanggiGUI.py
     """
     def __init__(self, game_class, color):
         super().__init__(game_class, color)
@@ -1008,6 +998,8 @@ class Cannon(Piece):
                 to move (not blocked), can't jump over another cannon (friend or foe),
                 can't capture another cannon.
     Uses super() to initialize the color and receive the JanggiGame class.
+    Creates an 'image' data member: uses 'name' to access the correct .svg from /assets,
+    creates a pygame image for use with JanggiGUI.py
     """
     def __init__(self, game_class, color):
         super().__init__(game_class, color)
@@ -1170,6 +1162,8 @@ class Soldier(Piece):
     Move type: can move forward, left, or right one square, and
                 can move diagonally forward if on a fortress corner/center
     Uses super() to initialize the color and receive the JanggiGame class.
+    Creates an 'image' data member: uses 'name' to access the correct .svg from /assets,
+    creates a pygame image for use with JanggiGUI.py
     """
     def __init__(self, game_class, color):
         super().__init__(game_class, color)
