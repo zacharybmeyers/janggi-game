@@ -25,8 +25,20 @@ import logging
 import cProfile
 import argparse
 import time
+import random
 
 from JanggiGame import JanggiGame
+
+AI_NAMES = [
+    'Gye Bon-Hwa', # (Glorious One)',
+    'Tak Hyun-Jung', # (Wise and Righteous)',
+    'Nae Chun-Hei', # (Justice and Grace)',
+    'Jo Chunghee', # (One Who is Righteous and Dutiful)',
+    'Cheon Mee', # (Beauty)',
+    'Yong Dong-Min', # (East and Cleverness)',
+    'Go Dae', # (The Great One)',
+    'Dongbang In Ho', # (Humanity and Goodness)',
+]
 
 
 def get_pixel_coordinates():
@@ -193,8 +205,23 @@ def blit_message(screen, msg):
     # refresh display
     pygame.display.flip()
 
-def blit_ai_move(screen, start, end):
-    blit_message(screen, f"Bot Moved: {start} -> {end}")
+ai_blue = None
+ai_red = None
+def blit_ai_move(screen, start, end, level, color):
+    global ai_blue
+    global ai_red
+
+    name = None
+    if 'b' == color:
+        if ai_blue is None:
+            ai_blue = random.choice(AI_NAMES)
+        name = ai_blue
+    elif 'r' == color:
+        if ai_red is None:
+            ai_red = random.choice(AI_NAMES)
+        name = ai_red
+
+    blit_message(screen, f"{name} Moved: {start} -> {end}")
 
 def blit_invalid_move(screen):
     blit_message(screen, "Invalid move, try again!")
@@ -303,7 +330,7 @@ def main(ai_level):
                 time.sleep(t)
                 (ai_start, ai_end) = game.make_ai_move(ai_level)
                 blit_current_board(game, screen)
-                blit_ai_move(screen, ai_start, ai_end)
+                blit_ai_move(screen, ai_start, ai_end, ai_level, game.get_turn())
                 if game.is_in_check(game.get_turn_long()):
                     blit_in_check(screen, game.get_turn_long())
 
