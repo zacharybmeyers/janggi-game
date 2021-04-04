@@ -1,6 +1,6 @@
 # Janggi-Game
 
-**A playable GUI for games of Janggi (Korean chess)**
+**A playable GUI for games of [Janggi](https://en.wikipedia.org/wiki/Janggi) (Korean chess)**
 
 Running ``JanggiGUI.py`` imports the game logic from ``JanggiGame.py`` and displays a simple GUI using Pygame.
 
