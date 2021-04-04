@@ -193,6 +193,9 @@ def blit_message(screen, msg):
     # refresh display
     pygame.display.flip()
 
+def blit_ai_move(screen, start, end):
+    blit_message(screen, f"Bot Moved: {start} -> {end}")
+
 def blit_invalid_move(screen):
     blit_message(screen, "Invalid move, try again!")
 
@@ -257,7 +260,8 @@ def perform_set_of_moves(game):
     # game.make_move('e4', 'e3')  # checkmate
 
 
-def main():
+def main(ai_level):
+
     # create a Janggi Game instance
     game = JanggiGame()
 
@@ -293,7 +297,13 @@ def main():
     while running:
         if game.is_in_check(game.get_turn_long()):
             blit_in_check(screen, game.get_turn_long())
-            time.sleep(1)
+
+        if ai_level is not None and game.get_game_state() == "UNFINISHED":
+            if 1337 == ai_level or game.get_turn() == 'r':
+                time.sleep(0.01)
+                (ai_start, ai_end) = game.make_ai_move(ai_level)
+                blit_current_board(game, screen)
+                blit_ai_move(screen, ai_start, ai_end)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -332,9 +342,17 @@ def main():
 
 
 if __name__ == "__main__":
+    ai_levels = {
+        None: None,
+        'easy': 0,
+        'hard': 10,
+        'impossible': 99,
+        'duel': 1337,
+    }
 
     parser = argparse.ArgumentParser(description='Play Janggi!')
     parser.add_argument('--debug', '-d', dest='debug', action='count', default=0)
+    parser.add_argument('--ai', dest='ai', choices=ai_levels.keys())
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -343,5 +361,5 @@ if __name__ == "__main__":
             )
 
     #cProfile.run('main()', 'stats')
-    main()
+    main(ai_levels[args.ai])
 

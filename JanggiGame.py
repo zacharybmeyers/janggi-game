@@ -22,6 +22,7 @@
 import pygame
 import os
 import logging
+import random
 
 
 class JanggiGame:
@@ -241,7 +242,7 @@ class JanggiGame:
         helper function returns a large list of all the possible moves a player (color)
         can make with their current set of pieces on the game board
         """
-        all_valid_moves = list()
+        all_valid_moves = dict()
         board = self.get_board()
         # iterate through all pieces on the game board
         for row in board:
@@ -251,7 +252,7 @@ class JanggiGame:
                     # if color
                     if color in piece_obj.get_name():
                         # get the valid moves and add them to the enemy list
-                        all_valid_moves.extend(piece_obj.get_valid_moves())
+                        all_valid_moves[piece_obj.get_numeric_position()] = piece_obj.get_valid_moves()
         return all_valid_moves
 
     def is_in_check(self, color):
@@ -271,7 +272,10 @@ class JanggiGame:
             enemy_color = "b"
 
         # get all the enemy's valid moves
-        enemy_valid_moves = self.all_player_moves(enemy_color)
+        enemy_valid_moves = []
+        for move_list in self.all_player_moves(enemy_color).values():
+            enemy_valid_moves.extend(move_list)
+
         # get the friendly general
         general_obj = self.get_general(friendly_color)
         # get the general's position
@@ -280,7 +284,7 @@ class JanggiGame:
         # if the general's position can be captured by the opposite player
         # on the next turn, they are in check
         if general_pos in enemy_valid_moves:
-            logging.debug('{color} in check!')
+            logging.debug(f'{color} in check!')
             return True
         else:
             return False
@@ -331,6 +335,28 @@ class JanggiGame:
 
         # return whether or not this hypothetical move caused the player to be in check
         return valid_move
+
+    def make_ai_move(self, level):
+        assert(self.get_game_state() == "UNFINISHED")
+
+        moves = self.all_player_moves(self.get_turn())
+
+        while True:
+            start_num = random.choice(list(moves.keys()))
+            end_num = random.choice(moves[start_num])
+
+            if level > 0:
+                # disallow pass moves for anything other than "easy" AI
+                if len(moves[start_num]) > 1:
+                    while start_num == end_num:
+                        end_num = random.choice(moves[start_num])
+
+            start = self.numeric_to_algebraic(start_num)
+            end = self.numeric_to_algebraic(end_num)
+            if self.make_move(start, end):
+                break
+
+        return (start, end)
 
     def make_move(self, start, end):
         """
