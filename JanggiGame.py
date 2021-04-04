@@ -340,21 +340,65 @@ class JanggiGame:
         assert(self.get_game_state() == "UNFINISHED")
 
         moves = self.all_player_moves(self.get_turn())
+        invalid_moves = set()
 
         while True:
-            start_num = random.choice(list(moves.keys()))
-            end_num = random.choice(moves[start_num])
+            start_num = None
+            end_num = None
+
+            # Find move that causes check
+            #if level >= 20:
+            #    for s,ends in moves.items():
+            #        for e in ends:
+            #            p = self.get_square_contents(e)
+            #            if p is not None:
+            #                pass
+                
+            # Find move with highest capture value
+            if start_num is None and level >= 10:
+                max_capture = 0
+                for s,ends in moves.items():
+                    for e in ends:
+                        if (s,e) in invalid_moves:
+                            continue  # skip previously tried invalid moves
+                        if s == e:
+                            continue  # skip pass moves
+                        p = self.get_square_contents(self.numeric_to_algebraic(e))
+                        if p is not None:
+                            if p.get_worth() > max_capture:
+                                (start_num, end_num) = (s, e)
+                                max_capture = p.get_worth()
+                if start_num is not None:
+                    logging.debug('AI found max-capture={} with {} -> {}'.format(
+                            max_capture, self.numeric_to_algebraic(start_num),
+                            self.numeric_to_algebraic(end_num)))
+                else:
+                    logging.debug('AI failed to find max-capture')
+                 
+            # Find random move
+            if start_num is None:
+                assert (end_num is None)
+                start_num = random.choice(list(moves.keys()))
+                end_num = random.choice(moves[start_num])
+                logging.debug('AI trying random move {} -> {}'.format(
+                        self.numeric_to_algebraic(start_num),
+                        self.numeric_to_algebraic(end_num)))
 
             if level > 0:
                 # disallow pass moves for anything other than "easy" AI
                 if len(moves[start_num]) > 1:
                     while start_num == end_num:
                         end_num = random.choice(moves[start_num])
+                    logging.debug('AI avoiding pass move, new move {} -> {}'.format(
+                            self.numeric_to_algebraic(start_num),
+                            self.numeric_to_algebraic(end_num)))
 
             start = self.numeric_to_algebraic(start_num)
             end = self.numeric_to_algebraic(end_num)
             if self.make_move(start, end):
                 break
+            else:
+                invalid_moves.add((start_num, end_num))
 
         return (start, end)
 
@@ -466,15 +510,20 @@ class JanggiGame:
 
 class Piece:
     """Represents a Piece for use in the JanggiGame class"""
-    def __init__(self, game_class, color):
+    def __init__(self, game_class, color, worth):
         """initializes game, color, and position"""
         self._game = game_class
         self._color = color
+        self._worth = worth
         self._position = None
 
     def get_color(self):
         """getter for color"""
         return self._color
+
+    def get_worth(self):
+        """getter for worth"""
+        return self._worth
 
     def get_position(self):
         """getter for position"""
@@ -553,7 +602,7 @@ class Chariot(Piece):
     creates a pygame image for use with JanggiGUI.py
     """
     def __init__(self, game_class, color):
-        super().__init__(game_class, color)
+        super().__init__(game_class, color, 13)
         self._name = color + "Ch"
         filename = self._name + ".svg"
         self._image = pygame.image.load(os.path.join("assets", filename))
@@ -698,7 +747,7 @@ class Elephant(Piece):
     creates a pygame image for use with JanggiGUI.py
     """
     def __init__(self, game_class, color):
-        super().__init__(game_class, color)
+        super().__init__(game_class, color, 3)
         self._name = color + "El"
         filename = self._name + ".svg"
         self._image = pygame.image.load(os.path.join("assets", filename))
@@ -801,7 +850,7 @@ class Horse(Piece):
     creates a pygame image for use with JanggiGUI.py
     """
     def __init__(self, game_class, color):
-        super().__init__(game_class, color)
+        super().__init__(game_class, color, 5)
         self._name = color + "Hs"
         filename = self._name + ".svg"
         self._image = pygame.image.load(os.path.join("assets", filename))
@@ -892,7 +941,7 @@ class Guard(Piece):
     creates a pygame image for use with JanggiGUI.py
     """
     def __init__(self, game_class, color):
-        super().__init__(game_class, color)
+        super().__init__(game_class, color, 3)
         self._name = color + "Gd"
         filename = self._name + ".svg"
         self._image = pygame.image.load(os.path.join("assets", filename))
@@ -964,7 +1013,7 @@ class General(Piece):
     creates a pygame image for use with JanggiGUI.py
     """
     def __init__(self, game_class, color):
-        super().__init__(game_class, color)
+        super().__init__(game_class, color, 99)
         self._name = color + "Gn"
         filename = self._name + ".svg"
         self._image = pygame.image.load(os.path.join("assets", filename))
@@ -1039,7 +1088,7 @@ class Cannon(Piece):
     creates a pygame image for use with JanggiGUI.py
     """
     def __init__(self, game_class, color):
-        super().__init__(game_class, color)
+        super().__init__(game_class, color, 7)
         self._name = color + "Cn"
         filename = self._name + ".svg"
         self._image = pygame.image.load(os.path.join("assets", filename))
@@ -1203,7 +1252,7 @@ class Soldier(Piece):
     creates a pygame image for use with JanggiGUI.py
     """
     def __init__(self, game_class, color):
-        super().__init__(game_class, color)
+        super().__init__(game_class, color, 2)
         self._name = color + "Sd"
         filename = self._name + ".svg"
         self._image = pygame.image.load(os.path.join("assets", filename))
