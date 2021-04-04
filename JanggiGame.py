@@ -510,12 +510,27 @@ class JanggiGame:
 
 class Piece:
     """Represents a Piece for use in the JanggiGame class"""
-    def __init__(self, game_class, color, worth):
+    def __init__(self, game_class, color, worth, name, image):
         """initializes game, color, and position"""
         self._game = game_class
         self._color = color
         self._worth = worth
         self._position = None
+        self._name = name
+        self._image = image
+
+    def get_name(self):
+        """getter for name"""
+        return self._name
+
+    def get_image(self):
+        """getter for image"""
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            color = (255, 0, 0)
+            if 'b' == self._color:
+                color = (0, 0, 255)
+            return pygame.font.SysFont("timesnewroman", 30).render(self._name[1:], True, color)
+        return self._image
 
     def get_color(self):
         """getter for color"""
@@ -602,18 +617,10 @@ class Chariot(Piece):
     creates a pygame image for use with JanggiGUI.py
     """
     def __init__(self, game_class, color):
-        super().__init__(game_class, color, 13)
-        self._name = color + "Ch"
-        filename = self._name + ".svg"
-        self._image = pygame.image.load(os.path.join("assets", filename))
-
-    def get_image(self):
-        """getter for image"""
-        return self._image
-
-    def get_name(self):
-        """getter for name"""
-        return self._name
+        name = color + "Ch"
+        filename = name + ".svg"
+        image = pygame.image.load(os.path.join("assets", filename))
+        super().__init__(game_class, color, 13, name, image)
 
     def orthogonal_moves(self, direction):
         """
@@ -747,18 +754,10 @@ class Elephant(Piece):
     creates a pygame image for use with JanggiGUI.py
     """
     def __init__(self, game_class, color):
-        super().__init__(game_class, color, 3)
-        self._name = color + "El"
-        filename = self._name + ".svg"
-        self._image = pygame.image.load(os.path.join("assets", filename))
-
-    def get_image(self):
-        """getter for image"""
-        return self._image
-
-    def get_name(self):
-        """getter for name"""
-        return self._name
+        name = color + "El"
+        filename = name + ".svg"
+        image = pygame.image.load(os.path.join("assets", filename))
+        super().__init__(game_class, color, 3, name, image)
 
     def elephant_diagonal_moves(self, direction):
         """
@@ -850,18 +849,10 @@ class Horse(Piece):
     creates a pygame image for use with JanggiGUI.py
     """
     def __init__(self, game_class, color):
-        super().__init__(game_class, color, 5)
-        self._name = color + "Hs"
-        filename = self._name + ".svg"
-        self._image = pygame.image.load(os.path.join("assets", filename))
-
-    def get_image(self):
-        """getter for image"""
-        return self._image
-
-    def get_name(self):
-        """getter for name"""
-        return self._name
+        name = color + "Hs"
+        filename = name + ".svg"
+        image = pygame.image.load(os.path.join("assets", filename))
+        super().__init__(game_class, color, 5, name, image)
 
     def horse_diagonal_moves(self, direction):
         """
@@ -941,18 +932,10 @@ class Guard(Piece):
     creates a pygame image for use with JanggiGUI.py
     """
     def __init__(self, game_class, color):
-        super().__init__(game_class, color, 3)
-        self._name = color + "Gd"
-        filename = self._name + ".svg"
-        self._image = pygame.image.load(os.path.join("assets", filename))
-
-    def get_image(self):
-        """getter for image"""
-        return self._image
-
-    def get_name(self):
-        """getter for name"""
-        return self._name
+        name = color + "Gd"
+        filename = name + ".svg"
+        image = pygame.image.load(os.path.join("assets", filename))
+        super().__init__(game_class, color, 3, name, image)
 
     def get_valid_moves(self):
         """
@@ -1013,18 +996,10 @@ class General(Piece):
     creates a pygame image for use with JanggiGUI.py
     """
     def __init__(self, game_class, color):
-        super().__init__(game_class, color, 99)
-        self._name = color + "Gn"
-        filename = self._name + ".svg"
-        self._image = pygame.image.load(os.path.join("assets", filename))
-
-    def get_image(self):
-        """getter for image"""
-        return self._image
-
-    def get_name(self):
-        """getter for name"""
-        return self._name
+        name = color + "Gn"
+        filename = name + ".svg"
+        image = pygame.image.load(os.path.join("assets", filename))
+        super().__init__(game_class, color, 99, name, image)
 
     def get_valid_moves(self):
         """
@@ -1088,18 +1063,10 @@ class Cannon(Piece):
     creates a pygame image for use with JanggiGUI.py
     """
     def __init__(self, game_class, color):
-        super().__init__(game_class, color, 7)
-        self._name = color + "Cn"
-        filename = self._name + ".svg"
-        self._image = pygame.image.load(os.path.join("assets", filename))
-
-    def get_image(self):
-        """getter for image"""
-        return self._image
-
-    def get_name(self):
-        """getter for name"""
-        return self._name
+        name = color + "Cn"
+        filename = name + ".svg"
+        image = pygame.image.load(os.path.join("assets", filename))
+        super().__init__(game_class, color, 7, name, image)
 
     def orthogonal_moves(self, direction):
         """
@@ -1252,18 +1219,10 @@ class Soldier(Piece):
     creates a pygame image for use with JanggiGUI.py
     """
     def __init__(self, game_class, color):
-        super().__init__(game_class, color, 2)
-        self._name = color + "Sd"
-        filename = self._name + ".svg"
-        self._image = pygame.image.load(os.path.join("assets", filename))
-
-    def get_image(self):
-        """getter for image"""
-        return self._image
-
-    def get_name(self):
-        """getter for name"""
-        return self._name
+        name = color + "Sd"
+        filename = name + ".svg"
+        image = pygame.image.load(os.path.join("assets", filename))
+        super().__init__(game_class, color, 2, name, image)
 
     def get_valid_moves(self):
         """
