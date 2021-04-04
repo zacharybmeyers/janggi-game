@@ -21,6 +21,11 @@
 
 import pygame
 import os
+import logging
+import cProfile
+import argparse
+import time
+
 from JanggiGame import JanggiGame
 
 
@@ -136,10 +141,7 @@ def blit_current_board(game, screen):
                 screen.blit(image, rect.topleft)
 
     # draw a colored circle to indicate turn
-    if game.get_turn() == "b":
-        color = "blue"
-    else:
-        color = "red"
+    color = game.get_turn_long()
     pygame.draw.circle(screen, color, (342, 731), 10)
 
     # refresh display
@@ -176,22 +178,30 @@ def blit_ending_message(game, screen):
     pygame.display.flip()
 
 
-def blit_invalid_move(screen):
+def blit_message(screen, msg):
     """
     helper function takes the current pygame screen object and blits
-    an invalid move message to the bottom corner
+    a message to the bottom corner
     """
     # create image for ending message, blit to screen
     font = pygame.font.SysFont("timesnewroman", 20)
-    invalid_str = "Invalid move, try again!"
     black = 0, 0, 0
-    invalid_img = font.render(invalid_str, True, black)
-    rect = invalid_img.get_rect()
+    img = font.render(msg, True, black)
+    rect = img.get_rect()
     rect.center = 145, 731
-    screen.blit(invalid_img, rect.topleft)
+    screen.blit(img, rect.topleft)
     # refresh display
     pygame.display.flip()
 
+def blit_invalid_move(screen):
+    blit_message(screen, "Invalid move, try again!")
+
+def blit_in_check(screen, color):
+    if 'b' == color:
+        color = 'Blue'
+    elif 'r' == color:
+        color = 'Red'
+    blit_message(screen, f"{color} is in check!")
 
 def perform_set_of_moves(game):
     game.make_move('e7', 'e6')
@@ -278,8 +288,13 @@ def main():
     start = None
     end = None
     valid_move = None
+
     # main loop
     while running:
+        if game.is_in_check(game.get_turn_long()):
+            blit_in_check(screen, game.get_turn_long())
+            time.sleep(1)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -291,14 +306,14 @@ def main():
                             if start is None and end is None:   # if first collision, set start
                                 start = alg_coord
                                 # DEBUG:
-                                # print(f"A starting rectangle was clicked! {start}")
+                                logging.debug(f"A starting rectangle was clicked! {start}")
                                 # if previous move was invalid, reset screen after first new click
                                 if not valid_move:
                                     blit_current_board(game, screen)
                             elif start is not None and end is None:     # if second collision, set end
                                 end = alg_coord
                                 # DEBUG:
-                                # print(f"An ending rectangle was clicked! {end}")
+                                logging.debug(f"An ending rectangle was clicked! {end}")
             # make move inside loop
             if start is not None and end is not None:
                 # make move and assign the validity
@@ -317,4 +332,16 @@ def main():
 
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description='Play Janggi!')
+    parser.add_argument('--debug', '-d', dest='debug', action='count', default=0)
+    args = parser.parse_args()
+
+    logging.basicConfig(
+            format='%(asctime)s %(levelname)8s: %(message)s',
+            level=logging.INFO - (10 * args.debug),
+            )
+
+    #cProfile.run('main()', 'stats')
     main()
+

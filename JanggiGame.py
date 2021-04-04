@@ -21,6 +21,7 @@
 
 import pygame
 import os
+import logging
 
 
 class JanggiGame:
@@ -94,6 +95,9 @@ class JanggiGame:
     def set_game_state(self, game_state):
         """setter for game state, where game_state is a string"""
         self._game_state = game_state
+
+    def get_turn_long(self):
+        return { 'b': 'blue', 'r': 'red' }[self._turn]
 
     def get_turn(self):
         """getter for turn"""
@@ -276,6 +280,7 @@ class JanggiGame:
         # if the general's position can be captured by the opposite player
         # on the next turn, they are in check
         if general_pos in enemy_valid_moves:
+            logging.debug('{color} in check!')
             return True
         else:
             return False
@@ -349,7 +354,7 @@ class JanggiGame:
         :return: True if valid move, False otherwise
         """
         # for debugging
-        # print(f"Attempting: {start} -> {end}")
+        logging.debug(f"Attempting: {start} -> {end}")
 
         # INVALID CONDITIONS
         # get the Piece from the start square
@@ -391,6 +396,7 @@ class JanggiGame:
         #  If the valid move is a pass move (and it hasn't put or left the player in check),
         #  simply update turn and return True
         if start == end:
+            logging.info(f'{current_color} moved: pass')
             self.update_turn()
             return True
 
@@ -427,6 +433,7 @@ class JanggiGame:
                 self.set_game_state("RED_WON")
 
         # update turn
+        logging.info(f'{current_color} moved: {start} -> {end}')
         self.update_turn()
         return True
 
