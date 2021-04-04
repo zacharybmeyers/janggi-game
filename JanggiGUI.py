@@ -266,8 +266,9 @@ def main():
     # blit each one to the screen for now to debug
     board_rectangles = get_board_rectangles()
     # FOR DEBUGGING: prints all board rectangles for visualization
-    # for alg_coord, my_rect in board_rectangles.items():
+    #for alg_coord, my_rect in board_rectangles.items():
     #    pygame.draw.rect(screen, "blue", my_rect)
+    #pygame.display.flip()
 
     # initialize boolean to control main loop
     running = True

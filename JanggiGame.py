@@ -376,6 +376,10 @@ class JanggiGame:
             next_color = "b"
             next_color_for_check = "blue"
 
+        # If the move places the current player in check, invalid move
+        if self.hypothetical_move(start, end) is False:
+            return False
+
         # At this point, the current player's move is in their valid move set, but...
         #   if the current player is in check...
         #       and if their hypothetical move is False (puts or leaves their general in check),
@@ -1234,7 +1238,13 @@ class Soldier(Piece):
 # test move sequences below
 def main():
     game = JanggiGame()
-    game.make_move("a7", "b7")
+    game.make_move("e9", "e9")
+    game.make_move("e4", "e5")
+    game.make_move("e9", "e9")
+    game.make_move("e5", "e6")
+    game.make_move("e9", "e9")
+    game.make_move("e6", "e7")
+    print(game.make_move("e9", "e8"))
     game.display_board()
 
 

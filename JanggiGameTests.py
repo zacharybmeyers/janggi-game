@@ -196,3 +196,13 @@ class UnitTests(unittest.TestCase):
         game.make_move("b7", "a7")
         self.assertTrue(game.make_move("b3", "e3"))    # make sure cannon can jump over same color
         game.display_board()
+
+    def test_general_cannot_place_itself_in_check(self):
+        game = JanggiGame()
+        game.make_move("e9", "e9")
+        game.make_move("e4", "e5")
+        game.make_move("e9", "e9")
+        game.make_move("e5", "e6")
+        game.make_move("e9", "e9")
+        game.make_move("e6", "e7")
+        self.assertFalse(game.make_move("e9", "e8"))
