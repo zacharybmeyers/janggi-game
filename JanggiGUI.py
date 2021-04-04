@@ -295,15 +295,17 @@ def main(ai_level):
 
     # main loop
     while running:
-        if game.is_in_check(game.get_turn_long()):
-            blit_in_check(screen, game.get_turn_long())
-
         if ai_level is not None and game.get_game_state() == "UNFINISHED":
             if 1337 == ai_level or game.get_turn() == 'r':
-                time.sleep(0.01)
+                t = 0.5
+                if 1337 == ai_level:
+                    t = 0.01
+                time.sleep(t)
                 (ai_start, ai_end) = game.make_ai_move(ai_level)
                 blit_current_board(game, screen)
                 blit_ai_move(screen, ai_start, ai_end)
+                if game.is_in_check(game.get_turn_long()):
+                    blit_in_check(screen, game.get_turn_long())
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -333,6 +335,8 @@ def main(ai_level):
                 if not valid_move:
                     # display invalid move prompt
                     blit_invalid_move(screen)
+                if game.is_in_check(game.get_turn_long()):
+                    blit_in_check(screen, game.get_turn_long())
                 # reset start and end for next turn, continue loop
                 start = None
                 end = None
