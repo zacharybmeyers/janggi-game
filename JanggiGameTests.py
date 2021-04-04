@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Author:       Zachary Meyers
 # Date:         2021-03-01
 # Description:  Unit tests for JanggiGame, namely all the potential moves and methods.
@@ -206,3 +208,7 @@ class UnitTests(unittest.TestCase):
         game.make_move("e9", "e9")
         game.make_move("e6", "e7")
         self.assertFalse(game.make_move("e9", "e8"))
+
+if __name__ == '__main__':
+    unittest.main()
+
