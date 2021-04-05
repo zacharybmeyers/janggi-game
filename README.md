@@ -29,7 +29,12 @@ Demonstration:
 * creating a visual representation is paramount to success
 * my whiteboard is my best friend
 
+## In development:
+
+* AI with variable difficulty
+
 ## Future goals:
 
-* develop an AI for single player
-* make the game window resizeable
+* resizeable game window
+* toggle to translate pieces
+* highlight valid moves on click
