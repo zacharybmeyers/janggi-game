@@ -70,6 +70,16 @@ class JanggiGame:
                 if piece_obj is not None:
                     yield piece_obj
 
+    def generate_pieces_by_color(self, color):
+        """generator extends generate_piece_objects to yield pieces of a specified color"""
+        for piece_obj in self.generate_piece_objects():
+            if piece_obj.get_color() == color:
+                yield piece_obj
+    
+    def get_pieces_by_color(self, color):
+        """returns a list of the current pieces by color ('b' or 'r')"""
+        return list(self.generate_pieces_by_color(color))
+
     def get_all_pieces(self):
         """returns a list of the current piece objects"""
         return list(self.generate_piece_objects())
@@ -251,11 +261,9 @@ class JanggiGame:
         val = list of valid moves
         """
         all_valid_moves = dict()
-        # iterate through all pieces on the game board
-        for piece_obj in self.get_all_pieces():
-            if color in piece_obj.get_color():
-                # get the valid moves and add them to the enemy list
-                all_valid_moves[piece_obj.get_numeric_position()] = piece_obj.get_valid_moves()
+        # iterate through the player's pieces
+        for piece_obj in self.get_pieces_by_color(color):
+            all_valid_moves[piece_obj.get_numeric_position()] = piece_obj.get_valid_moves()
         return all_valid_moves
 
     def is_in_check(self, color):
@@ -455,7 +463,7 @@ class JanggiGame:
             next_color_for_check = "blue"
 
         # At this point, the current player's move is in their valid move set, but...
-        #   If this move places or leaves the current player's general in check, invalid move
+        #   If this move ends with the current player's general in check, invalid move
         if self.hypothetical_move(start, end) is False:
             return False
 
