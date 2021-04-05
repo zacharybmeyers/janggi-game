@@ -63,6 +63,17 @@ class JanggiGame:
         """getter for board"""
         return self._board
 
+    def generate_piece_objects(self):
+        """generator yields all the piece objects from the game board"""
+        for row in self.get_board():
+            for piece_obj in row:
+                if piece_obj is not None:
+                    yield piece_obj
+
+    def get_all_pieces(self):
+        """returns a list of the current piece objects"""
+        return list(self.generate_piece_objects())
+
     def setup_piece_positions(self):
         """helper function gives an algebraic position to every Piece on the board"""
         # set starting positions for game pieces
@@ -227,32 +238,24 @@ class JanggiGame:
         with a specified color
         """
         general_name = color + "Gn"
-        board = self.get_board()
         # iterate through all pieces on the game board
-        for row in board:
-            for piece_obj in row:
-                # if not empty...
-                if piece_obj is not None:
-                    # if general, return general
-                    if general_name in piece_obj.get_name():
-                        return piece_obj
+        for piece_obj in self.get_all_pieces():
+            if general_name in piece_obj.get_name():
+                return piece_obj
 
     def all_player_moves(self, color):
         """
-        helper function returns a large list of all the possible moves a player (color)
+        helper function returns a large dictionary of all the possible moves a player (color)
         can make with their current set of pieces on the game board
+        key = piece's position
+        val = list of valid moves
         """
         all_valid_moves = dict()
-        board = self.get_board()
         # iterate through all pieces on the game board
-        for row in board:
-            for piece_obj in row:
-                # if not empty...
-                if piece_obj is not None:
-                    # if color
-                    if color in piece_obj.get_name():
-                        # get the valid moves and add them to the enemy list
-                        all_valid_moves[piece_obj.get_numeric_position()] = piece_obj.get_valid_moves()
+        for piece_obj in self.get_all_pieces():
+            if color in piece_obj.get_color():
+                # get the valid moves and add them to the enemy list
+                all_valid_moves[piece_obj.get_numeric_position()] = piece_obj.get_valid_moves()
         return all_valid_moves
 
     def is_in_check(self, color):
@@ -451,17 +454,10 @@ class JanggiGame:
             next_color = "b"
             next_color_for_check = "blue"
 
-        # If the move places the current player in check, invalid move
+        # At this point, the current player's move is in their valid move set, but...
+        #   If this move places or leaves the current player's general in check, invalid move
         if self.hypothetical_move(start, end) is False:
             return False
-
-        # At this point, the current player's move is in their valid move set, but...
-        #   if the current player is in check...
-        #       and if their hypothetical move is False (puts or leaves their general in check),
-        #           invalid move
-        if self.is_in_check(current_color_for_check):
-            if self.hypothetical_move(start, end) is False:
-                return False
 
         #  If the valid move is a pass move (and it hasn't put or left the player in check),
         #  simply update turn and return True
@@ -1279,14 +1275,9 @@ class Soldier(Piece):
 # test move sequences below
 def main():
     game = JanggiGame()
-    game.make_move("e9", "e9")
-    game.make_move("e4", "e5")
-    game.make_move("e9", "e9")
-    game.make_move("e5", "e6")
-    game.make_move("e9", "e9")
-    game.make_move("e6", "e7")
-    print(game.make_move("e9", "e8"))
-    game.display_board()
+    pieces = game.get_all_pieces()
+    for piece in pieces:
+        print(piece.get_name())
 
 
 if __name__ == "__main__":
