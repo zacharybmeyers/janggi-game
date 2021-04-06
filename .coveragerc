@@ -1,0 +1,7 @@
+# .coveragerc to control coverage.py
+[run]
+branch = True
+source = janggi
+
+[html]
+title = Janggi Game Unit Test Coverage Report

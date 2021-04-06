@@ -1,44 +1,11 @@
 #!/usr/bin/env python3
 
-# Author:       Zachary Meyers
-# Date:         2021-03-01
-# Description:  Unit tests for JanggiGame, namely all the potential moves and methods.
-
 import unittest
-from JanggiGame import JanggiGame, Soldier, Chariot, Horse, Elephant
 
+from janggi.gameboard import JanggiGame
+from janggi.piece     import Soldier, Chariot, Horse, Elephant
 
-class UnitTests(unittest.TestCase):
-    def test_algebraic_to_numeric(self):
-        game = JanggiGame()
-        alg1 = "a1"
-        alg2 = "e5"
-        alg3 = "d10"
-        self.assertEqual((0, 0), game.algebraic_to_numeric(alg1))
-        self.assertEqual((4, 4), game.algebraic_to_numeric(alg2))
-        self.assertEqual((9, 3), game.algebraic_to_numeric(alg3))
-
-    def test_numeric_to_algebraic(self):
-        game = JanggiGame()
-        num1 = (0, 0)
-        num2 = (4, 4)
-        num3 = (9, 3)
-        self.assertEqual("a1", game.numeric_to_algebraic(num1))
-        self.assertEqual("e5", game.numeric_to_algebraic(num2))
-        self.assertEqual("d10", game.numeric_to_algebraic(num3))
-
-    def test_get_square_contents(self):
-        game = JanggiGame()
-        board = game.get_board()
-        self.assertEqual(board[0][0], game.get_square_contents("a1"))
-
-    def test_set_square_contents(self):
-        game = JanggiGame()
-        # assign a new red soldier to an empty square
-        new_sold = Soldier(game, "r")
-        game.set_square_contents("d9", new_sold)
-        self.assertEqual(new_sold, game.get_square_contents("d9"))
-
+class TestSoldier(unittest.TestCase):
     def test_solider_blocked_by_same_color(self):
         game = JanggiGame()
         # blue soldier at b7 can't move to c7 (occupied by another blue soldier)
@@ -88,6 +55,7 @@ class UnitTests(unittest.TestCase):
         a5_sd = game.get_square_contents("a5")
         self.assertEqual("b", a5_sd.get_color())
 
+class TestGeneral(unittest.TestCase):
     def test_blue_general_moves(self):
         game = JanggiGame()
         # blue center to outer
@@ -111,6 +79,17 @@ class UnitTests(unittest.TestCase):
         game = JanggiGame()
         self.assertTrue(game.make_move("e9", "e9"))
 
+    def test_general_cannot_place_itself_in_check(self):
+        game = JanggiGame()
+        game.make_move("e9", "e9")
+        game.make_move("e4", "e5")
+        game.make_move("e9", "e9")
+        game.make_move("e5", "e6")
+        game.make_move("e9", "e9")
+        game.make_move("e6", "e7")
+        self.assertFalse(game.make_move("e9", "e8"))
+
+class TestGuard(unittest.TestCase):
     def test_guard_moves(self):
         game = JanggiGame()
         # blue guard to d9
@@ -131,6 +110,7 @@ class UnitTests(unittest.TestCase):
         red_sold.set_position("d9")
         self.assertTrue(game.make_move("d10", "d9"))   # move guard to capture red soldier and remove check
 
+class TestChariot(unittest.TestCase):
     def test_chariot_orthogonal_moves(self):
         game = JanggiGame()
         b_char = Chariot(game, "b")                    # make new blue chariot
@@ -165,6 +145,7 @@ class UnitTests(unittest.TestCase):
 
         self.assertTrue(game.make_move("d3", "f1"))
 
+class TestHorse(unittest.TestCase):
     def test_horse_capture_move(self):
         game = JanggiGame()
         # blue horse at d4
@@ -182,6 +163,7 @@ class UnitTests(unittest.TestCase):
         valid_moves = [(6, 1), (6, 3), (9, 4), (7, 4), (7, 0), (8, 2)]
         self.assertCountEqual(valid_moves, b_horse.get_valid_moves())
 
+class TestElephant(unittest.TestCase):
     def test_elephant_moves(self):
         game = JanggiGame()
         b_ele = Elephant(game, "b")
@@ -190,6 +172,7 @@ class UnitTests(unittest.TestCase):
         valid_moves = [(1, 5), (1, 1), (2, 0), (2, 6), (4, 3)]
         self.assertCountEqual(valid_moves, b_ele.get_valid_moves())
 
+class TestCannon(unittest.TestCase):
     def test_cannon_jump_over_friendly_color(self):
         game = JanggiGame()
         # make arbitrary moves
@@ -199,15 +182,6 @@ class UnitTests(unittest.TestCase):
         self.assertTrue(game.make_move("b3", "e3"))    # make sure cannon can jump over same color
         game.display_board()
 
-    def test_general_cannot_place_itself_in_check(self):
-        game = JanggiGame()
-        game.make_move("e9", "e9")
-        game.make_move("e4", "e5")
-        game.make_move("e9", "e9")
-        game.make_move("e5", "e6")
-        game.make_move("e9", "e9")
-        game.make_move("e6", "e7")
-        self.assertFalse(game.make_move("e9", "e8"))
 
 if __name__ == '__main__':
     unittest.main()
