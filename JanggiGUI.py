@@ -19,13 +19,15 @@
 #                   --displays a winning message when the game is finished
 #               The game window is not resizeable.
 
-import pygame
-import os
-import logging
-import cProfile
 import argparse
-import time
+import cProfile
+import logging
+import os
 import random
+import time
+
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+import pygame
 
 from JanggiGame import JanggiGame
 
@@ -140,17 +142,16 @@ def blit_current_board(game, screen):
     # blit each game piece image here!!!!
     pixel_dict = get_pixel_coordinates()
     board = game.get_board()
-    for row in board:
-        for piece_obj in row:
-            if piece_obj is not None:
-                # get the piece's position, image and associated rectangle
-                pos = piece_obj.get_position()
-                image = piece_obj.get_image()
-                rect = image.get_rect()
-                # set rectangle center to pixel position
-                rect.center = pixel_dict[pos]
-                # blit image to screen using rectangle's top left coordinate
-                screen.blit(image, rect.topleft)
+
+    for piece_obj in game.all_pieces():
+        # get the piece's position, image and associated rectangle
+        pos = piece_obj.get_position()
+        image = piece_obj.get_image()
+        rect = image.get_rect()
+        # set rectangle center to pixel position
+        rect.center = pixel_dict[pos]
+        # blit image to screen using rectangle's top left coordinate
+        screen.blit(image, rect.topleft)
 
     # draw a colored circle to indicate turn
     color = game.get_turn_long()
@@ -337,22 +338,35 @@ def main(ai_level):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:   # left mouse button
                     # iterate through every board square's rectangle
                     for alg_coord, my_rect in board_rectangles.items():
                         if my_rect.collidepoint(event.pos):
                             if start is None and end is None:   # if first collision, set start
+                                p = game.get_square_contents(alg_coord)
+                                if p is None:
+                                    break  # Ignore starting clicks on empty positions
+                                if p.get_color() != game.get_turn():
+                                    break  # Ignore starting clicks on opponent's positions
+                                
                                 start = alg_coord
-                                # DEBUG:
                                 logging.debug(f"A starting rectangle was clicked! {start}")
-                                # if previous move was invalid, reset screen after first new click
-                                if not valid_move:
-                                    blit_current_board(game, screen)
+
+                                moves = p.get_valid_moves_algebraic()
+                                logging.debug('valid moves: {}'.format(', '.join(moves)))
+                                for m in moves:
+                                    if m == start:
+                                        continue  # don't highlight pass moves
+                                    rect = board_rectangles[m]
+                                    pygame.draw.circle(screen, game.get_turn_long(), rect.center, 5)
+                                pygame.display.flip()
+
                             elif start is not None and end is None:     # if second collision, set end
                                 end = alg_coord
-                                # DEBUG:
                                 logging.debug(f"An ending rectangle was clicked! {end}")
+
             # make move inside loop
             if start is not None and end is not None:
                 # make move and assign the validity
@@ -367,6 +381,7 @@ def main(ai_level):
                 # reset start and end for next turn, continue loop
                 start = None
                 end = None
+
             # if game is finished, display winner and end
             if game.get_game_state() != "UNFINISHED":
                 blit_ending_message(game, screen)
