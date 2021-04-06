@@ -5,7 +5,7 @@
 # Description:  Unit tests for JanggiGame, namely all the potential moves and methods.
 
 import unittest
-from JanggiGame import JanggiGame, Soldier, Chariot, Horse, Elephant
+from janggi.gameboard import JanggiGame, Soldier, Chariot, Horse, Elephant
 
 
 class UnitTests(unittest.TestCase):

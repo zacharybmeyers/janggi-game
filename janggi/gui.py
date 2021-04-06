@@ -29,7 +29,7 @@ import time
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 import pygame
 
-from JanggiGame import JanggiGame
+from janggi.gameboard import JanggiGame
 
 AI_NAMES = [
     'Gye Bon-Hwa', # (Glorious One)',
