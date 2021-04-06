@@ -338,6 +338,7 @@ def main(ai_level):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:   # left mouse button
                     # iterate through every board square's rectangle
@@ -346,20 +347,24 @@ def main(ai_level):
                             if start is None and end is None:   # if first collision, set start
                                 p = game.get_square_contents(alg_coord)
                                 if p is None:
-                                    continue  # Ignore starting clicks on empty positions
+                                    break  # Ignore starting clicks on empty positions
                                 if p.get_color() != game.get_turn():
-                                    continue  # Ignore starting clicks on opponent's positions
+                                    break  # Ignore starting clicks on opponent's positions
                                 
                                 start = alg_coord
-                                # DEBUG:
                                 logging.debug(f"A starting rectangle was clicked! {start}")
-                                # if previous move was invalid, reset screen after first new click
-                                if not valid_move:
-                                    blit_current_board(game, screen)
+
+                                moves = p.get_valid_moves_algebraic()
+                                logging.debug('valid moves: {}'.format(', '.join(moves)))
+                                for m in moves:
+                                    rect = board_rectangles[m]
+                                    pygame.draw.circle(screen, game.get_turn_long(), rect.center, 5)
+                                pygame.display.flip()
+
                             elif start is not None and end is None:     # if second collision, set end
                                 end = alg_coord
-                                # DEBUG:
                                 logging.debug(f"An ending rectangle was clicked! {end}")
+
             # make move inside loop
             if start is not None and end is not None:
                 # make move and assign the validity

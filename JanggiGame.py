@@ -557,6 +557,12 @@ class Piece:
         numeric_pos = self._game.algebraic_to_numeric(algebraic_pos)
         return numeric_pos
 
+    def get_valid_moves_algebraic(self):
+        l = []
+        for n in self.get_valid_moves():
+            l.append(self._game.numeric_to_algebraic(n))
+        return l
+
     def set_position(self, alg_coord):
         """setter for position, takes an algebraic coordinate ie 'b1'"""
         self._position = alg_coord
