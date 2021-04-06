@@ -357,6 +357,8 @@ def main(ai_level):
                                 moves = p.get_valid_moves_algebraic()
                                 logging.debug('valid moves: {}'.format(', '.join(moves)))
                                 for m in moves:
+                                    if m == start:
+                                        continue  # don't highlight pass moves
                                     rect = board_rectangles[m]
                                     pygame.draw.circle(screen, game.get_turn_long(), rect.center, 5)
                                 pygame.display.flip()
