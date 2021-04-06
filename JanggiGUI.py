@@ -19,13 +19,15 @@
 #                   --displays a winning message when the game is finished
 #               The game window is not resizeable.
 
-import pygame
-import os
-import logging
-import cProfile
 import argparse
-import time
+import cProfile
+import logging
+import os
 import random
+import time
+
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+import pygame
 
 from JanggiGame import JanggiGame
 

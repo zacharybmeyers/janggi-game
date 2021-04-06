@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Author:       Zachary Meyers
 # Date:         2021-03-10
 # Description:  Portfolio Project for playing a game of Janggi (Korean Chess).
@@ -19,10 +21,12 @@
 #               moved as part of its validation, so it is important that each child of the Piece class
 #               has a get_valid_moves() method that is specific to that Piece's move set.
 
-import pygame
 import os
 import logging
 import random
+
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+import pygame
 
 
 class JanggiGame:
