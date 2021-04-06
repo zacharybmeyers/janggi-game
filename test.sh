@@ -2,7 +2,7 @@
 
 export PYTHONDONTWRITEBYTECODE=1
 export PYTHONPATH=janggi:${PYTHONPATH}
-coverage run --source janggi -m unittest discover -v -s janggi/
+coverage run -m unittest discover -v -s janggi/
 
 if [[ "$(uname)" == "Darwin" ]]; then
   coverage html
