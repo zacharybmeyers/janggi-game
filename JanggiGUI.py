@@ -140,17 +140,16 @@ def blit_current_board(game, screen):
     # blit each game piece image here!!!!
     pixel_dict = get_pixel_coordinates()
     board = game.get_board()
-    for row in board:
-        for piece_obj in row:
-            if piece_obj is not None:
-                # get the piece's position, image and associated rectangle
-                pos = piece_obj.get_position()
-                image = piece_obj.get_image()
-                rect = image.get_rect()
-                # set rectangle center to pixel position
-                rect.center = pixel_dict[pos]
-                # blit image to screen using rectangle's top left coordinate
-                screen.blit(image, rect.topleft)
+
+    for piece_obj in game.all_pieces():
+        # get the piece's position, image and associated rectangle
+        pos = piece_obj.get_position()
+        image = piece_obj.get_image()
+        rect = image.get_rect()
+        # set rectangle center to pixel position
+        rect.center = pixel_dict[pos]
+        # blit image to screen using rectangle's top left coordinate
+        screen.blit(image, rect.topleft)
 
     # draw a colored circle to indicate turn
     color = game.get_turn_long()

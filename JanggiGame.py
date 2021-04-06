@@ -63,40 +63,36 @@ class JanggiGame:
         """getter for board"""
         return self._board
 
-    def generate_piece_objects(self):
-        """generator yields all the piece objects from the game board"""
-        for row in self.get_board():
-            for piece_obj in row:
+    def indexed_piece_objects(self):
+        """
+        generator yields all the piece objects from the game board along
+        with associated row/column indexes
+        """
+        for ridx,row in enumerate(self.get_board()):
+            for cidx,piece_obj in enumerate(row):
                 if piece_obj is not None:
-                    yield piece_obj
+                    yield (ridx,cidx,piece_obj)
 
-    def generate_pieces_by_color(self, color):
-        """generator extends generate_piece_objects to yield pieces of a specified color"""
-        for piece_obj in self.generate_piece_objects():
+    def all_pieces(self):
+        for (ridx,cidx,piece) in self.indexed_piece_objects():
+            yield piece
+
+    def pieces_by_color(self, color):
+        """
+        generator extends all_pieces to yield all piece objects from the
+        game board of a specified color ('b' or 'r')
+        """
+        for piece_obj in self.all_pieces():
             if piece_obj.get_color() == color:
                 yield piece_obj
-    
-    def get_pieces_by_color(self, color):
-        """returns a list of the current pieces by color ('b' or 'r')"""
-        return list(self.generate_pieces_by_color(color))
-
-    def get_all_pieces(self):
-        """returns a list of the current piece objects"""
-        return list(self.generate_piece_objects())
 
     def setup_piece_positions(self):
         """helper function gives an algebraic position to every Piece on the board"""
         # set starting positions for game pieces
-        row_index = 0
-        for row in self.get_board():
-            col_index = 0
-            for piece_obj in row:
-                if piece_obj is not None:                               # if element is a Piece
-                    num_coord = (row_index, col_index)                  # create coordinate
-                    alg_coord = self.numeric_to_algebraic(num_coord)    # convert to algebraic
-                    piece_obj.set_position(alg_coord)                   # set the position
-                col_index += 1
-            row_index += 1
+        for (row_index,col_index,piece_obj) in self.indexed_piece_objects():
+            num_coord = (row_index, col_index)                  # create coordinate
+            alg_coord = self.numeric_to_algebraic(num_coord)    # convert to algebraic
+            piece_obj.set_position(alg_coord)                   # set the position
 
     def get_blue_fortress(self):
         """getter for blue fortress coordinates"""
@@ -249,7 +245,7 @@ class JanggiGame:
         """
         general_name = color + "Gn"
         # iterate through all pieces on the game board
-        for piece_obj in self.get_all_pieces():
+        for piece_obj in self.all_pieces():
             if general_name in piece_obj.get_name():
                 return piece_obj
 
@@ -262,7 +258,7 @@ class JanggiGame:
         """
         all_valid_moves = dict()
         # iterate through the player's pieces
-        for piece_obj in self.get_pieces_by_color(color):
+        for piece_obj in self.pieces_by_color(color):
             all_valid_moves[piece_obj.get_numeric_position()] = piece_obj.get_valid_moves()
         return all_valid_moves
 
@@ -1283,10 +1279,9 @@ class Soldier(Piece):
 # test move sequences below
 def main():
     game = JanggiGame()
-    pieces = game.get_all_pieces()
-    for piece in pieces:
+    for piece in game.all_pieces():
         print(piece.get_name())
-
 
 if __name__ == "__main__":
     main()
+
