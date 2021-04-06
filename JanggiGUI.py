@@ -343,6 +343,12 @@ def main(ai_level):
                     for alg_coord, my_rect in board_rectangles.items():
                         if my_rect.collidepoint(event.pos):
                             if start is None and end is None:   # if first collision, set start
+                                p = game.get_square_contents(alg_coord)
+                                if p is None:
+                                    continue  # Ignore starting clicks on empty positions
+                                if p.get_color() != game.get_turn():
+                                    continue  # Ignore starting clicks on opponent's positions
+                                
                                 start = alg_coord
                                 # DEBUG:
                                 logging.debug(f"A starting rectangle was clicked! {start}")
@@ -367,6 +373,7 @@ def main(ai_level):
                 # reset start and end for next turn, continue loop
                 start = None
                 end = None
+
             # if game is finished, display winner and end
             if game.get_game_state() != "UNFINISHED":
                 blit_ending_message(game, screen)
