@@ -1,2 +1,8 @@
+# Vim editor temp files
+*.swp
+
+# virtual environments
 env-*/
+
+# Python caching
 __pycache__/
