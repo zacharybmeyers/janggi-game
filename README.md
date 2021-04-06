@@ -37,4 +37,3 @@ Demonstration:
 
 * resizeable game window
 * toggle to translate pieces
-* highlight valid moves on click
