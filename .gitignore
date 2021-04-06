@@ -6,3 +6,10 @@ env-*/
 
 # Python caching
 __pycache__/
+
+# MacOS temp files
+.DS_Store
+
+# Coverage.py files
+.coverage
+htmlcov/
