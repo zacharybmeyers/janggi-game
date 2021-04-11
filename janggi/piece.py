@@ -4,12 +4,14 @@ import logging
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 import pygame
 
+from janggi.utils import numeric_to_algebraic, algebraic_to_numeric, invert_coordinates
+
 
 class Piece:
-    """Represents a Piece for use in the JanggiGame class"""
-    def __init__(self, game_class, color, worth, name, image):
+    """Represents a Piece for use in the Game class"""
+    def __init__(self, board, color, worth, name, image):
         """initializes game, color, and position"""
-        self._game = game_class
+        self._board = board
         self._color = color
         self._worth = worth
         self._position = None
@@ -47,13 +49,13 @@ class Piece:
         numeric position (tuple) and returns it
         """
         algebraic_pos = self.get_position()
-        numeric_pos = self._game.algebraic_to_numeric(algebraic_pos)
+        numeric_pos = algebraic_to_numeric(algebraic_pos)
         return numeric_pos
 
     def get_valid_moves_algebraic(self):
         l = []
         for n in self.get_valid_moves():
-            l.append(self._game.numeric_to_algebraic(n))
+            l.append(numeric_to_algebraic(n))
         return l
 
     def set_position(self, alg_coord):
@@ -66,7 +68,7 @@ class Piece:
         any child of the Piece instance.
         Returns: a list without any moves that are off the game board
         """
-        board = self._game.get_board()
+        board = self._board.get_board()
         num_rows = len(board)
         num_cols = len(board[0])
         valid_moves = []
@@ -84,7 +86,7 @@ class Piece:
         of the same color as the current Piece instance (blocked)
         """
         valid_moves = []
-        board = self._game.get_board()
+        board = self._board.get_board()
         for coord in tup_list:
             row_index, col_index = coord
             piece_obj = board[row_index][col_index]
@@ -99,7 +101,7 @@ class Piece:
         helper function takes a tuple coordinate and
         returns true if it's on the game board, false otherwise
         """
-        board = self._game.get_board()
+        board = self._board.get_board()
         row_len = len(board[0])
         col_len = len(board)
 
@@ -115,15 +117,15 @@ class Chariot(Piece):
     Inherits from the Piece superclass.
     Move type: as many squares as desired along straight lines of board,
                 or diagonal lines if in the fortress
-    Uses super() to initialize the color and receive the JanggiGame class.
+    Uses super() to initialize the color and receive the Game class.
     Creates an 'image' data member: uses 'name' to access the correct .svg from /assets,
     creates a pygame image for use with JanggiGUI.py
     """
-    def __init__(self, game_class, color):
+    def __init__(self, board, color):
         name = color + "Ch"
         filename = name + ".svg"
         image = pygame.image.load(os.path.join("assets", filename))
-        super().__init__(game_class, color, 13, name, image)
+        super().__init__(board, color, 13, name, image)
 
     def orthogonal_moves(self, direction):
         """
@@ -155,7 +157,7 @@ class Chariot(Piece):
             next_row = row_index + step                         # move row index either down or up
 
         orthogonal_moves = list()
-        board = self._game.get_board()
+        board = self._board.get_board()
         valid_square = True
         while valid_square:
             if self.on_game_board((next_row, next_column)):  # if next piece is on the board
@@ -182,16 +184,16 @@ class Chariot(Piece):
         row_index, col_index = chariot_pos
 
         # initialize to blue fortress
-        blue_fortress = self._game.get_blue_fortress()
+        blue_fortress = self._board.get_blue_fortress()
         fortress = blue_fortress
-        fort_corners = self._game.get_blue_fortress_corners()
-        fort_center = self._game.get_blue_fortress_center()
+        fort_corners = self._board.get_blue_fortress_corners()
+        fort_center = self._board.get_blue_fortress_center()
 
         # if the chariot is not in the blue fortress, invert to red fortress coordinates
         if chariot_pos not in blue_fortress:
-            self._game.invert_coordinates(fortress)
-            self._game.invert_coordinates(fort_corners)
-            self._game.invert_coordinates(fort_center)
+            invert_coordinates(fortress)
+            invert_coordinates(fort_corners)
+            invert_coordinates(fort_center)
 
         potential_moves = list()
         # if chariot is in the center or a corner, can move one square diagonally
@@ -202,8 +204,8 @@ class Chariot(Piece):
             potential_moves.append((row_index - 1, col_index - 1))  # diagonal 1 up/left
 
         # if chariot is in a fortress corner, and if the center is empty, can move two squares diagonally
-        alg_center = self._game.numeric_to_algebraic(fort_center[0])
-        center_obj = self._game.get_square_contents(alg_center)
+        alg_center = numeric_to_algebraic(fort_center[0])
+        center_obj = self._board.get_square_contents(alg_center)
         if chariot_pos in fort_corners and center_obj is None:
             potential_moves.append((row_index + 2, col_index + 2))  # diagonal 2 down/right
             potential_moves.append((row_index + 2, col_index - 2))  # diagonal 2 down/left
@@ -252,15 +254,15 @@ class Elephant(Piece):
     Inherits from the Piece superclass.
     Move type: forward, backward, left, or right one square, then diagonal
                 outward 2 squares. Can be blocked at any point along this path.
-    Uses super() to initialize the color and receive the JanggiGame class.
+    Uses super() to initialize the color and receive the Game class.
     Creates an 'image' data member: uses 'name' to access the correct .svg from /assets,
     creates a pygame image for use with JanggiGUI.py
     """
-    def __init__(self, game_class, color):
+    def __init__(self, board, color):
         name = color + "El"
         filename = name + ".svg"
         image = pygame.image.load(os.path.join("assets", filename))
-        super().__init__(game_class, color, 3, name, image)
+        super().__init__(board, color, 3, name, image)
 
     def elephant_diagonal_moves(self, direction):
         """
@@ -295,8 +297,8 @@ class Elephant(Piece):
         diagonal_moves = list()
         if self.on_game_board((next_row, next_column)):  # if in bounds
             ortho_square = (next_row, next_column)
-            ortho_square_alg = self._game.numeric_to_algebraic(ortho_square)
-            ortho_obj = self._game.get_square_contents(ortho_square_alg)
+            ortho_square_alg = numeric_to_algebraic(ortho_square)
+            ortho_obj = self._board.get_square_contents(ortho_square_alg)
             if ortho_obj is None:  # if orthogonal square is not blocked
                 # make two lists for possible diagonals 1 square away and
                 # 2 squares away (depending on direction)
@@ -310,13 +312,13 @@ class Elephant(Piece):
                     second_diagonals = [(next_row+2, next_column+step+step), (next_row-2, next_column+step+step)]
                 # iterate only through the first diagonals that are on the game board
                 for first_diag in self.remove_out_of_bounds(first_diagonals):
-                    first_diag_alg = self._game.numeric_to_algebraic(first_diag)
-                    first_diag_obj = self._game.get_square_contents(first_diag_alg)
+                    first_diag_alg = numeric_to_algebraic(first_diag)
+                    first_diag_obj = self._board.get_square_contents(first_diag_alg)
                     if first_diag_obj is None:  # if empty (clear)
                         # iterate through second diagonals that are on the board
                         for second_diag in self.remove_out_of_bounds(second_diagonals):
-                            second_diag_alg = self._game.numeric_to_algebraic(second_diag)
-                            second_diag_obj = self._game.get_square_contents(second_diag_alg)
+                            second_diag_alg = numeric_to_algebraic(second_diag)
+                            second_diag_obj = self._board.get_square_contents(second_diag_alg)
                             if second_diag_obj is None or second_diag_obj.get_color() != self.get_color():
                                 # if empty or enemy, add to valid moves
                                 diagonal_moves.append(second_diag)
@@ -347,15 +349,15 @@ class Horse(Piece):
     Inherits from the Piece superclass.
     Move type: forward, backward, left, or right one square, then diagonal
                 outward 1 square. Can be blocked at any point along this path.
-    Uses super() to initialize the color and receive the JanggiGame class.
+    Uses super() to initialize the color and receive the Game class.
     Creates an 'image' data member: uses 'name' to access the correct .svg from /assets,
     creates a pygame image for use with JanggiGUI.py
     """
-    def __init__(self, game_class, color):
+    def __init__(self, board, color):
         name = color + "Hs"
         filename = name + ".svg"
         image = pygame.image.load(os.path.join("assets", filename))
-        super().__init__(game_class, color, 5, name, image)
+        super().__init__(board, color, 5, name, image)
 
     def horse_diagonal_moves(self, direction):
         """
@@ -390,8 +392,8 @@ class Horse(Piece):
         diagonal_moves = list()
         if self.on_game_board((next_row, next_column)):  # if in bounds
             ortho_square = (next_row, next_column)
-            ortho_square_alg = self._game.numeric_to_algebraic(ortho_square)
-            ortho_obj = self._game.get_square_contents(ortho_square_alg)
+            ortho_square_alg = numeric_to_algebraic(ortho_square)
+            ortho_obj = self._board.get_square_contents(ortho_square_alg)
             if ortho_obj is None:  # if orthogonal square is not blocked
                 # make list of 2 possible diagonals (depending on direction)
                 diagonals = None
@@ -401,8 +403,8 @@ class Horse(Piece):
                     diagonals = [(next_row+1, next_column+step), (next_row-1, next_column+step)]
                 # iterate only through the diagonals that are on the game board
                 for diagonal in self.remove_out_of_bounds(diagonals):
-                    diagonal_alg = self._game.numeric_to_algebraic(diagonal)
-                    diagonal_obj = self._game.get_square_contents(diagonal_alg)
+                    diagonal_alg = numeric_to_algebraic(diagonal)
+                    diagonal_obj = self._board.get_square_contents(diagonal_alg)
                     if diagonal_obj is None or diagonal_obj.get_color() != self.get_color():  # if empty or enemy
                         diagonal_moves.append(diagonal)  # add coordinate to valid moves
         return diagonal_moves
@@ -430,15 +432,15 @@ class Guard(Piece):
     Inherits from the Piece superclass.
     Move type: confined to fortress, moves one square oly, or one
                 diagonally if in the center or on a corner
-    Uses super() to initialize the color and receive the JanggiGame class.
+    Uses super() to initialize the color and receive the Game class.
     Creates an 'image' data member: uses 'name' to access the correct .svg from /assets,
     creates a pygame image for use with JanggiGUI.py
     """
-    def __init__(self, game_class, color):
+    def __init__(self, board, color):
         name = color + "Gd"
         filename = name + ".svg"
         image = pygame.image.load(os.path.join("assets", filename))
-        super().__init__(game_class, color, 3, name, image)
+        super().__init__(board, color, 3, name, image)
 
     def get_valid_moves(self):
         """
@@ -449,16 +451,16 @@ class Guard(Piece):
         row_index, col_index = guard_pos
 
         # initialize to blue fortress
-        blue_fortress = self._game.get_blue_fortress()
+        blue_fortress = self._board.get_blue_fortress()
         fortress = blue_fortress
-        fort_corners = self._game.get_blue_fortress_corners()
-        fort_center = self._game.get_blue_fortress_center()
+        fort_corners = self._board.get_blue_fortress_corners()
+        fort_center = self._board.get_blue_fortress_center()
 
         # if the guard is not in the blue fortress, invert to red fortress coordinates
         if guard_pos not in blue_fortress:
-            self._game.invert_coordinates(fortress)
-            self._game.invert_coordinates(fort_corners)
-            self._game.invert_coordinates(fort_center)
+            invert_coordinates(fortress)
+            invert_coordinates(fort_corners)
+            invert_coordinates(fort_center)
 
         guard_moves = list()
         # all positions in the fortress can move up/down or left/right (within the fortress)
@@ -494,15 +496,15 @@ class General(Piece):
     Inherits from the Piece superclass.
     Move type: confined to fortress, moves one square orthogonally, or one
                 diagonally if in the center or on a corner
-    Uses super() to initialize the color and receive the JanggiGame class.
+    Uses super() to initialize the color and receive the Game class.
     Creates an 'image' data member: uses 'name' to access the correct .svg from /assets,
     creates a pygame image for use with JanggiGUI.py
     """
-    def __init__(self, game_class, color):
+    def __init__(self, board, color):
         name = color + "Gn"
         filename = name + ".svg"
         image = pygame.image.load(os.path.join("assets", filename))
-        super().__init__(game_class, color, 99, name, image)
+        super().__init__(board, color, 99, name, image)
 
     def get_valid_moves(self):
         """
@@ -514,16 +516,16 @@ class General(Piece):
         row_index, col_index = gen_pos
 
         # initialize to blue fortress
-        blue_fortress = self._game.get_blue_fortress()
+        blue_fortress = self._board.get_blue_fortress()
         fortress = blue_fortress
-        fort_corners = self._game.get_blue_fortress_corners()
-        fort_center = self._game.get_blue_fortress_center()
+        fort_corners = self._board.get_blue_fortress_corners()
+        fort_center = self._board.get_blue_fortress_center()
 
         # if the general is not in the blue fortress, invert to red fortress coordinates
         if gen_pos not in blue_fortress:
-            self._game.invert_coordinates(fortress)
-            self._game.invert_coordinates(fort_corners)
-            self._game.invert_coordinates(fort_center)
+            invert_coordinates(fortress)
+            invert_coordinates(fort_corners)
+            invert_coordinates(fort_center)
 
         gen_moves = list()
         # all positions in the fortress can move up/down or left/right (within the fortress)
@@ -561,15 +563,15 @@ class Cannon(Piece):
                 or diagonal lines if in the fortress. Must jump over a piece
                 to move (not blocked), can't jump over another cannon (friend or foe),
                 can't capture another cannon.
-    Uses super() to initialize the color and receive the JanggiGame class.
+    Uses super() to initialize the color and receive the Game class.
     Creates an 'image' data member: uses 'name' to access the correct .svg from /assets,
     creates a pygame image for use with JanggiGUI.py
     """
-    def __init__(self, game_class, color):
+    def __init__(self, board, color):
         name = color + "Cn"
         filename = name + ".svg"
         image = pygame.image.load(os.path.join("assets", filename))
-        super().__init__(game_class, color, 7, name, image)
+        super().__init__(board, color, 7, name, image)
 
     def orthogonal_moves(self, direction):
         """
@@ -600,7 +602,7 @@ class Cannon(Piece):
             next_row = row_index + step                         # move row index either down or up
 
         orthogonal_moves = list()
-        board = self._game.get_board()
+        board = self._board.get_board()
 
         # get next piece if it's on the board, until off the board
         # or a different piece is found...
@@ -648,20 +650,20 @@ class Cannon(Piece):
         row_index, col_index = cannon_pos
 
         # initialize to blue fortress
-        blue_fortress = self._game.get_blue_fortress()
+        blue_fortress = self._board.get_blue_fortress()
         fortress = blue_fortress
-        fort_corners = self._game.get_blue_fortress_corners()
-        fort_center = self._game.get_blue_fortress_center()     # list with tuple coord of fort center
+        fort_corners = self._board.get_blue_fortress_corners()
+        fort_center = self._board.get_blue_fortress_center()     # list with tuple coord of fort center
 
         # if the cannon is not in the blue fortress, invert to red fortress coordinates
         if cannon_pos not in blue_fortress:
-            self._game.invert_coordinates(fortress)
-            self._game.invert_coordinates(fort_corners)
-            self._game.invert_coordinates(fort_center)
+            invert_coordinates(fortress)
+            invert_coordinates(fort_corners)
+            invert_coordinates(fort_center)
 
         # get the object in the fortress center (either a Piece or None)
-        fort_center_alg = self._game.numeric_to_algebraic(fort_center[0])
-        fort_center_obj = self._game.get_square_contents(fort_center_alg)
+        fort_center_alg = numeric_to_algebraic(fort_center[0])
+        fort_center_obj = self._board.get_square_contents(fort_center_alg)
 
         potential_moves = list()
         # if cannon is in a corner, and the center is not empty and not a cannon,
@@ -683,8 +685,8 @@ class Cannon(Piece):
         valid_fortress_moves = list()
         for square in fortress_moves:
             # get object found at each square (either Piece or None)
-            square_alg = self._game.numeric_to_algebraic(square)
-            square_obj = self._game.get_square_contents(square_alg)
+            square_alg = numeric_to_algebraic(square)
+            square_obj = self._board.get_square_contents(square_alg)
             # if empty, valid move
             if square_obj is None:
                 valid_fortress_moves.append(square)
@@ -717,15 +719,15 @@ class Soldier(Piece):
     Inherits from the Piece superclass.
     Move type: can move forward, left, or right one square, and
                 can move diagonally forward if on a fortress corner/center
-    Uses super() to initialize the color and receive the JanggiGame class.
+    Uses super() to initialize the color and receive the Game class.
     Creates an 'image' data member: uses 'name' to access the correct .svg from /assets,
     creates a pygame image for use with JanggiGUI.py
     """
-    def __init__(self, game_class, color):
+    def __init__(self, board, color):
         name = color + "Sd"
         filename = name + ".svg"
         image = pygame.image.load(os.path.join("assets", filename))
-        super().__init__(game_class, color, 2, name, image)
+        super().__init__(board, color, 2, name, image)
 
     def get_valid_moves(self):
         """
@@ -737,16 +739,16 @@ class Soldier(Piece):
         row_index, col_index = sold_pos      # unpack tuple
 
         # initialize to blue fortress
-        blue_fortress = self._game.get_blue_fortress()
+        blue_fortress = self._board.get_blue_fortress()
         fort_inner_corners = [(7, 3), (7, 5)]
         fort_outer_corners = [(9, 3), (9, 5)]
         fort_center = [(8, 4)]
 
         # if soldier is not in blue fortress, invert to red fortress coordinates
         if sold_pos not in blue_fortress:
-            self._game.invert_coordinates(fort_inner_corners)
-            self._game.invert_coordinates(fort_outer_corners)
-            self._game.invert_coordinates(fort_center)
+            invert_coordinates(fort_inner_corners)
+            invert_coordinates(fort_outer_corners)
+            invert_coordinates(fort_center)
 
         # if soldier is red, vertical direction is positive (move down game board),
         # if soldier is blue, vertical direction is negative (move up game board)

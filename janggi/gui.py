@@ -3,9 +3,9 @@
 # Author:       Zachary Meyers
 # Date:         2021-03-23
 # Description:  This module creates a simple GUI with pygame for playing a game of Janggi,
-#               and makes use of the logic from the JanggiGame module.
+#               and makes use of the logic from the Game module.
 #               All images used in the assets directory are public domain.
-#               Each child instance of the Piece class in JanggiGame has a data member
+#               Each child instance of the Piece class in Game has a data member
 #               pointing to a corresponding piece image in assets.
 #               There are various helper functions that...:
 #                   --determine where to blit game pieces
@@ -29,7 +29,7 @@ import time
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 import pygame
 
-from janggi.gameboard import JanggiGame
+from janggi.game import Game
 
 AI_NAMES = [
     'Gye Bon-Hwa', # (Glorious One)',
@@ -97,7 +97,7 @@ def get_string_images(list_of_strings):
 
 def blit_current_board(game, screen):
     """
-    helper function takes a current instance of the JanggiGame class,
+    helper function takes a current instance of the Game class,
     iterates through the pieces and blits each one to the current pygame screen
     """
     # fill background with orange color
@@ -143,7 +143,7 @@ def blit_current_board(game, screen):
     pixel_dict = get_pixel_coordinates()
     board = game.get_board()
 
-    for piece_obj in game.all_pieces():
+    for piece_obj in board.all_pieces():
         # get the piece's position, image and associated rectangle
         pos = piece_obj.get_position()
         image = piece_obj.get_image()
@@ -163,7 +163,7 @@ def blit_current_board(game, screen):
 
 def blit_ending_message(game, screen):
     """
-    helper function takes the current instance of the JanggiGame class
+    helper function takes the current instance of the Game class
     and the current pygame screen, then blits a rectangle declaring
     the winner to the center of the screen
     """
@@ -291,7 +291,7 @@ def perform_set_of_moves(game):
 def main(ai_level):
 
     # create a Janggi Game instance
-    game = JanggiGame()
+    game = Game()
 
     # if desired, perform a predetermined set of moves here
     # perform_set_of_moves(game)
@@ -345,7 +345,7 @@ def main(ai_level):
                     for alg_coord, my_rect in board_rectangles.items():
                         if my_rect.collidepoint(event.pos):
                             if start is None and end is None:   # if first collision, set start
-                                p = game.get_square_contents(alg_coord)
+                                p = game.get_board().get_square_contents(alg_coord)
                                 if p is None:
                                     break  # Ignore starting clicks on empty positions
                                 if p.get_color() != game.get_turn():
