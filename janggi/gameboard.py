@@ -127,13 +127,11 @@ class JanggiGame:
         """setter for turn"""
         self._turn = color
 
-    def get_next_turn(self):
-        """getter returns the next player's turn"""
-        if self._turn == "b":
-            return "r"
-        else:
-            return "b"
-
+        def swap_color(color):
+            return 'b' == color and 'r' or 'b'
+    
+        def get_next_turn(self):
+            return swap_color(self._turn)
     def update_turn(self):
         """helper function updates the turn from 'r' to 'b' and vice versa"""
         if self.get_turn() == "b":
@@ -510,4 +508,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
