@@ -127,6 +127,13 @@ class JanggiGame:
         """setter for turn"""
         self._turn = color
 
+    def get_next_turn(self):
+        """getter returns the next player's turn"""
+        if self._turn == "b":
+            return "r"
+        else:
+            return "b"
+
     def update_turn(self):
         """helper function updates the turn from 'r' to 'b' and vice versa"""
         if self.get_turn() == "b":
@@ -273,11 +280,9 @@ class JanggiGame:
         Otherwise, return False.
         """
         # initialize colors
-        if color == "blue":
-            friendly_color = "b"
+        if color == "b":
             enemy_color = "r"
         else:
-            friendly_color = "r"
             enemy_color = "b"
 
         # get all the enemy's valid moves
@@ -286,7 +291,7 @@ class JanggiGame:
             enemy_valid_moves.extend(move_list)
 
         # get the friendly general
-        general_obj = self.get_general(friendly_color)
+        general_obj = self.get_general(color)
         # get the general's position
         general_pos = general_obj.get_numeric_position()
 
@@ -319,17 +324,10 @@ class JanggiGame:
         self.set_square_contents(end, piece_obj)
         piece_obj.set_position(end)
 
-        # get color from starting piece
-        check_color = None
-        if piece_obj.get_color() == "r":
-            check_color = "red"
-        elif piece_obj.get_color() == "b":
-            check_color = "blue"
-
         # run is_in_check on the current player,
         # if in check, set valid_move to FALSE
         # else set valid_move to TRUE
-        if self.is_in_check(check_color):
+        if self.is_in_check(piece_obj.get_color()):
             valid_move = False
         else:
             valid_move = True
@@ -448,17 +446,9 @@ class JanggiGame:
         if end_tup not in piece_obj.get_valid_moves():  # invalid if end position is not valid for this piece
             return False
 
-        # initialize colors for the current and next player,
-        # convert single letters to full words to use with is_in_check() method
+        # initialize colors for the current and next player
         current_color = self.get_turn()
-        if current_color == "b":
-            current_color_for_check = "blue"
-            next_color = "r"
-            next_color_for_check = "red"
-        else:
-            current_color_for_check = "red"
-            next_color = "b"
-            next_color_for_check = "blue"
+        next_color = self.get_next_turn()
 
         # At this point, the current player's move is in their valid move set, but...
         #   If this move ends with the current player's general in check, invalid move
@@ -487,7 +477,7 @@ class JanggiGame:
         # if the next player is in check...
         # try to determine checkmate: make use of hypothetical_move() helper
         checkmate = None
-        if self.is_in_check(next_color_for_check):
+        if self.is_in_check(next_color):
             # initialize checkmate to True
             checkmate = True
             enemy_general = self.get_general(next_color)
