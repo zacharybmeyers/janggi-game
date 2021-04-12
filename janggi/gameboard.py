@@ -127,17 +127,15 @@ class JanggiGame:
         """setter for turn"""
         self._turn = color
 
-        def swap_color(color):
-            return 'b' == color and 'r' or 'b'
+    def swap_color(self, color):
+        return 'b' == color and 'r' or 'b'
     
-        def get_next_turn(self):
-            return swap_color(self._turn)
+    def get_next_turn(self):
+        return self.swap_color(self._turn)
+    
     def update_turn(self):
-        """helper function updates the turn from 'r' to 'b' and vice versa"""
-        if self.get_turn() == "b":
-            self.set_turn("r")
-        elif self.get_turn() == "r":
-            self.set_turn("b")
+        """helper function updates the turn from 'r' to 'b' with the use of swap_color"""
+        self.set_turn(self.swap_color(self._turn))
 
     # HELPER METHODS
     def algebraic_to_numeric(self, alg_coord):
@@ -277,11 +275,8 @@ class JanggiGame:
         they are in check, return True.
         Otherwise, return False.
         """
-        # initialize colors
-        if color == "b":
-            enemy_color = "r"
-        else:
-            enemy_color = "b"
+        # initialize enemy color
+        enemy_color = self.swap_color(color)
 
         # get all the enemy's valid moves
         enemy_valid_moves = []
