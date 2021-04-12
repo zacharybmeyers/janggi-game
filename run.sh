@@ -2,4 +2,4 @@
 
 export PYTHONDONTWRITEBYTECODE=1
 export PYTHONPATH=janggi:${PYTHONPATH}
-./janggi/gameboard.py "$@"
+./janggi/game.py "$@"

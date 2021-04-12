@@ -141,9 +141,8 @@ def blit_current_board(game, screen):
 
     # blit each game piece image here!!!!
     pixel_dict = get_pixel_coordinates()
-    board = game.get_board()
 
-    for piece_obj in board.all_pieces():
+    for piece_obj in game.get_board().all_pieces():
         # get the piece's position, image and associated rectangle
         pos = piece_obj.get_position()
         image = piece_obj.get_image()
@@ -345,7 +344,7 @@ def main(ai_level):
                     for alg_coord, my_rect in board_rectangles.items():
                         if my_rect.collidepoint(event.pos):
                             if start is None and end is None:   # if first collision, set start
-                                p = game.get_board().get_square_contents(alg_coord)
+                                p = game.get_board().get_contents_algebraic(alg_coord)
                                 if p is None:
                                     break  # Ignore starting clicks on empty positions
                                 if p.get_color() != game.get_turn():

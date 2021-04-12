@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Author:       Zachary Meyers
 # Date:         2021-03-10
 # Description:  Portfolio Project for playing a game of Janggi (Korean Chess).
@@ -38,7 +36,7 @@ class Board:
         self._b_fortress = [(7, 3), (8, 3), (9, 3), (7, 4), (8, 4), (9, 4), (7, 5), (8, 5), (9, 5)]
         self._b_fort_corners = [(7, 3), (7, 5), (9, 3), (9, 5)]
         self._b_fort_center = [(8, 4)]
-        self._board = [
+        self._grid = [
             [Chariot(self, "r"), Elephant(self, "r"), Horse(self, "r"), Guard(self, "r"), None,
              Guard(self, "r"), Elephant(self, "r"), Horse(self, "r"), Chariot(self, "r")],
             [None, None, None, None, General(self, "r"), None, None, None, None],
@@ -55,18 +53,24 @@ class Board:
              Guard(self, "b"), Elephant(self, "b"), Horse(self, "b"), Chariot(self, "b")],
         ]
         # set starting positions for game pieces
-        self.setup_piece_positions()
+        self._init_piece_positions()
 
-    def get_board(self):
-        """getter for board"""
-        return self._board
+    def _init_piece_positions(self):
+        """helper function gives an algebraic position to every Piece on the board"""
+        # set starting positions for game pieces
+        for (row_index,col_index,piece_obj) in self.indexed_piece_objects():
+            num_coord = (row_index, col_index)                  # create coordinate
+            alg_coord = numeric_to_algebraic(num_coord)    # convert to algebraic
+            piece_obj.set_position(alg_coord)                   # set the position
+
+    # GENERATORS
 
     def indexed_piece_objects(self):
         """
         generator yields all the piece objects from the game board along
         with associated row/column indexes
         """
-        for ridx,row in enumerate(self.get_board()):
+        for ridx,row in enumerate(self._grid):
             for cidx,piece_obj in enumerate(row):
                 if piece_obj is not None:
                     yield (ridx,cidx,piece_obj)
@@ -84,13 +88,20 @@ class Board:
             if piece_obj.get_color() == color:
                 yield piece_obj
 
-    def setup_piece_positions(self):
-        """helper function gives an algebraic position to every Piece on the board"""
-        # set starting positions for game pieces
-        for (row_index,col_index,piece_obj) in self.indexed_piece_objects():
-            num_coord = (row_index, col_index)                  # create coordinate
-            alg_coord = numeric_to_algebraic(num_coord)    # convert to algebraic
-            piece_obj.set_position(alg_coord)                   # set the position
+    def all_player_moves(self, color):
+        """
+        helper function returns a large dictionary of all the possible moves a player (color)
+        can make with their current set of pieces on the game board
+        key = piece's position
+        val = list of valid moves
+        """
+        all_valid_moves = dict()
+        # iterate through the player's pieces
+        for piece_obj in self.pieces_by_color(color):
+            all_valid_moves[piece_obj.get_numeric_position()] = piece_obj.get_valid_moves()
+        return all_valid_moves
+
+    # GETTERS & SETTERS
 
     def get_blue_fortress(self):
         """getter for blue fortress coordinates"""
@@ -104,41 +115,6 @@ class Board:
         """getter for blue fortress center"""
         return self._b_fort_center
 
-
-    def display_board(self):
-        """
-        Displays the game board with letters A-I as a header
-        and rows 1-10 as column labels.
-        Uses the list_format helper function to pretty print.
-        """
-        header = ["A", "B", "C", "D", "E", "F", "G", "H", "I"]
-        print("   ", list_format(header))                          # print header
-        for num, row in enumerate(self.get_board()):               # print each row of the board
-            if num+1 != 10:
-                print(num+1, " ", list_format(row), " ", num+1)    # add extra space for single digit rows
-            else:
-                print(num+1, "", list_format(row), "", num+1)      # print row 10 as normal
-        print("   ", list_format(header))                          # print footer (header)
-
-    def get_square_contents(self, alg_coord):
-        """
-        Returns whatever is found at the given square's position in the game board
-        (either a Piece or None)
-        :param alg_coord: in string format ie 'b1'
-        :return: the object in the square (or None)
-        """
-        row_index, col_index = algebraic_to_numeric(alg_coord)
-        board = self.get_board()
-        return board[row_index][col_index]
-
-    def set_square_contents(self, alg_coord, piece_obj):
-        """
-        For debugging/testing, overrides a square on the board with a given Piece
-        """
-        row_index, col_index = algebraic_to_numeric(alg_coord)
-        board = self.get_board()
-        board[row_index][col_index] = piece_obj
-
     def get_general(self, color):
         """
         helper function returns the General object found on the board
@@ -150,18 +126,99 @@ class Board:
             if general_name in piece_obj.get_name():
                 return piece_obj
 
-    def all_player_moves(self, color):
+    def get_contents_numeric(self, tup_coord):
         """
-        helper function returns a large dictionary of all the possible moves a player (color)
-        can make with their current set of pieces on the game board
-        key = piece's position
-        val = list of valid moves
+        Returns whatever is found at the given square's position in the game board
+        (either a Piece or None)
+        :param tup_coord: row,col tuple
+        :return: the object in the square (or None)
         """
-        all_valid_moves = dict()
-        # iterate through the player's pieces
-        for piece_obj in self.pieces_by_color(color):
-            all_valid_moves[piece_obj.get_numeric_position()] = piece_obj.get_valid_moves()
-        return all_valid_moves
+        row,col = tup_coord
+        return self._grid[row][col]
+
+    def get_contents_algebraic(self, alg_coord):
+        """
+        Returns whatever is found at the given square's position in the game board
+        (either a Piece or None)
+        :param alg_coord: in string format ie 'b1'
+        :return: the object in the square (or None)
+        """
+        row_index, col_index = algebraic_to_numeric(alg_coord)
+        board = self._grid
+        return board[row_index][col_index]
+
+    def set_square_contents(self, alg_coord, piece_obj):
+        """
+        For debugging/testing, overrides a square on the board with a given Piece
+        """
+        row_index, col_index = algebraic_to_numeric(alg_coord)
+        board = self._grid
+        board[row_index][col_index] = piece_obj
+
+    # FILTERS
+
+    def filter_moves_out_of_bounds(self, moves_list):
+        """
+        helper function takes a list of moves (row,col tuples) and filters out any moves that are off the game board.
+
+        Returns: a list of moves that are only on the game board
+        """
+        grid = self._grid
+        num_rows = len(grid)
+        num_cols = len(grid[0])
+        valid_moves = []
+        for row, col in moves_list:
+            if 0 <= row < num_rows and 0 <= col < num_cols:  # if column is in [A...I] and row is in [0...9]
+                valid_moves.append((row, col))                    # add to valid moves
+        return valid_moves
+
+    def filter_moves_same_color(self, tup_list, color):
+        """
+        helper function takes a list of moves (row,col tuples) and filters out any moves that are occupied by a piece
+        of the given color.
+
+        Returns: a list of moves that are not occupied by a piece of the given color
+        """
+        valid_moves = []
+        for coord in tup_list:
+            row_index, col_index = coord
+            piece_obj = self._grid[row_index][col_index]
+            if piece_obj is None:
+                valid_moves.append(coord)           # valid if empty
+            elif piece_obj.get_color() != color:
+                valid_moves.append(coord)           # valid if opposite player color
+        return valid_moves
+
+    # HELPER METHODS
+
+    def on_game_board(self, tup_coord):
+        """
+        helper function takes a tuple coordinate and
+        returns true if it's on the game board, false otherwise
+        """
+        row_len = len(self._grid[0])
+        col_len = len(self._grid)
+
+        row, col = tup_coord
+        if 0 <= col < row_len and 0 <= row < col_len:
+            return True
+        else:
+            return False
+
+    def display_board(self):
+        """
+        Displays the game board with letters A-I as a header
+        and rows 1-10 as column labels.
+        Uses the list_format helper function to pretty print.
+        """
+        header = ["A", "B", "C", "D", "E", "F", "G", "H", "I"]
+        print("   ", list_format(header))                          # print header
+        for num, row in enumerate(self._grid):               # print each row of the board
+            if num+1 != 10:
+                print(num+1, " ", list_format(row), " ", num+1)    # add extra space for single digit rows
+            else:
+                print(num+1, "", list_format(row), "", num+1)      # print row 10 as normal
+        print("   ", list_format(header))                          # print footer (header)
 
     def is_in_check(self, color):
         """
@@ -197,55 +254,6 @@ class Board:
         else:
             return False
 
-    def hypothetical_move(self, start, end):
-        """
-            Helper function checks the validity of a potential move
-        (invalid if it puts or leaves the player in check). It is used for testing
-        checkmate on all of a General's valid moves at the end of make_move.
-            Takes a Piece's current position and a hypothetical end position,
-        (assumes start and end position have already been validated in make_move).
-        temporarily sets the game board to this scenario.
-            If the move would cause the player to be in check, returns False,
-        otherwise return True.
-        """
-        # get Piece from start position
-        piece_obj = self.get_square_contents(start)
-        # get object from end position (either a Piece or None)
-        end_obj = self.get_square_contents(end)
-        # clear start position
-        self.set_square_contents(start, None)
-        # set General to end position
-        self.set_square_contents(end, piece_obj)
-        piece_obj.set_position(end)
-
-        # get color from starting piece
-        check_color = None
-        if piece_obj.get_color() == "r":
-            check_color = "red"
-        elif piece_obj.get_color() == "b":
-            check_color = "blue"
-
-        # run is_in_check on the current player,
-        # if in check, set valid_move to FALSE
-        # else set valid_move to TRUE
-        if self.is_in_check(check_color):
-            valid_move = False
-        else:
-            valid_move = True
-
-        # set end position back to end_obj
-        self.set_square_contents(end, end_obj)
-        if end_obj is not None:
-            end_obj.set_position(end)
-        # set Piece back to start position
-        self.set_square_contents(start, piece_obj)
-        piece_obj.set_position(start)
-
-        # return whether or not this hypothetical move caused the player to be in check
-        return valid_move
-
-
-# HELPER FUNCTIONS
 
 
 def list_format(a_list):
@@ -268,14 +276,3 @@ def list_format(a_list):
         print_str += elem_str
         print_str += spaces
     return print_str
-
-
-# test move sequences below
-def main():
-    board = Board()
-    for piece in board.all_pieces():
-        print(piece.get_name())
-
-
-if __name__ == "__main__":
-    main()

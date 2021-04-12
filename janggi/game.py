@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import random
 import logging
 
@@ -80,7 +82,7 @@ class Game:
                             continue  # skip previously tried invalid moves
                         if s == e:
                             continue  # skip pass moves
-                        p = self._board.get_square_contents(numeric_to_algebraic(e))
+                        p = self._board.get_contents_algebraic(numeric_to_algebraic(e))
                         if p is not None:
                             if p.get_worth() > max_capture:
                                 (start_num, end_num) = (s, e)
@@ -119,6 +121,53 @@ class Game:
 
         return (start, end)
 
+    def hypothetical_move(self, start, end):
+        """
+            Helper function checks the validity of a potential move
+        (invalid if it puts or leaves the player in check). It is used for testing
+        checkmate on all of a General's valid moves at the end of make_move.
+            Takes a Piece's current position and a hypothetical end position,
+        (assumes start and end position have already been validated in make_move).
+        temporarily sets the game board to this scenario.
+            If the move would cause the player to be in check, returns False,
+        otherwise return True.
+        """
+        # get Piece from start position
+        piece_obj = self._board.get_contents_algebraic(start)
+        # get object from end position (either a Piece or None)
+        end_obj = self._board.get_contents_algebraic(end)
+        # clear start position
+        self._board.set_square_contents(start, None)
+        # set General to end position
+        self._board.set_square_contents(end, piece_obj)
+        piece_obj.set_position(end)
+
+        # get color from starting piece
+        check_color = None
+        if piece_obj.get_color() == "r":
+            check_color = "red"
+        elif piece_obj.get_color() == "b":
+            check_color = "blue"
+
+        # run is_in_check on the current player,
+        # if in check, set valid_move to FALSE
+        # else set valid_move to TRUE
+        if self.is_in_check(check_color):
+            valid_move = False
+        else:
+            valid_move = True
+
+        # set end position back to end_obj
+        self._board.set_square_contents(end, end_obj)
+        if end_obj is not None:
+            end_obj.set_position(end)
+        # set Piece back to start position
+        self._board.set_square_contents(start, piece_obj)
+        piece_obj.set_position(start)
+
+        # return whether or not this hypothetical move caused the player to be in check
+        return valid_move
+
     def make_move(self, start, end):
         """
         Checks the validity of a move, uses get_valid_moves() from the Piece class instance
@@ -145,7 +194,7 @@ class Game:
 
         # INVALID CONDITIONS
         # get the Piece from the start square
-        piece_obj = self._board.get_square_contents(start)
+        piece_obj = self._board.get_contents_algebraic(start)
         if piece_obj is None:
             return False  # invalid move if there's no piece
         if self.get_turn() != piece_obj.get_color():  # invalid move if not starting square's turn
@@ -170,7 +219,7 @@ class Game:
 
         # At this point, the current player's move is in their valid move set, but...
         #   If this move ends with the current player's general in check, invalid move
-        if self._board.hypothetical_move(start, end) is False:
+        if self.hypothetical_move(start, end) is False:
             return False
 
         #  If the valid move is a pass move (and it hasn't put or left the player in check),
@@ -181,16 +230,12 @@ class Game:
             return True
 
         # otherwise, VALID MOVE
-        start_tup = algebraic_to_numeric(start)
-        start_row, start_col = start_tup
-        end_row, end_col = end_tup  # unpack end square tup
-        board = self._board.get_board()  # get board
 
         # move Piece object to new square
         # (removes opposing piece or fills empty square)
-        board[end_row][end_col] = piece_obj
+        self._board.set_square_contents(end, piece_obj)
         piece_obj.set_position(end)  # store new position (algebraic coordinate)
-        board[start_row][start_col] = None  # clear start square
+        self._board.set_square_contents(start, None)
 
         # if the next player is in check...
         # try to determine checkmate: make use of hypothetical_move() helper
@@ -203,7 +248,7 @@ class Game:
             for move in enemy_general.get_valid_moves():
                 # try a hypothetical move
                 potential_move_pos = numeric_to_algebraic(move)
-                if self._board.hypothetical_move(enemy_general_pos, potential_move_pos):
+                if self.hypothetical_move(enemy_general_pos, potential_move_pos):
                     checkmate = False  # if a general can hypothetically move, not in checkmate
 
         if checkmate:
@@ -217,3 +262,14 @@ class Game:
         self.update_turn()
         return True
 
+
+# test move sequences below
+def main():
+    board = Board()
+    for piece in board.all_pieces():
+        print(piece.get_name())
+    board.display_board()
+
+
+if __name__ == "__main__":
+    main()

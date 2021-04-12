@@ -1,7 +1,5 @@
 import os
 import logging
-
-os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 import pygame
 
 from janggi.utils import numeric_to_algebraic, algebraic_to_numeric, invert_coordinates
@@ -10,7 +8,10 @@ from janggi.utils import numeric_to_algebraic, algebraic_to_numeric, invert_coor
 class Piece:
     """Represents a Piece for use in the Game class"""
     def __init__(self, board, color, worth, name, image):
-        """initializes game, color, and position"""
+        """
+        initializes game, color, and position
+        @type board: janggi.board.Board
+        """
         self._board = board
         self._color = color
         self._worth = worth
@@ -52,64 +53,18 @@ class Piece:
         numeric_pos = algebraic_to_numeric(algebraic_pos)
         return numeric_pos
 
+    def get_valid_moves(self):
+        raise NotImplementedError()
+
     def get_valid_moves_algebraic(self):
-        l = []
+        moves = []
         for n in self.get_valid_moves():
-            l.append(numeric_to_algebraic(n))
-        return l
+            moves.append(numeric_to_algebraic(n))
+        return moves
 
     def set_position(self, alg_coord):
         """setter for position, takes an algebraic coordinate ie 'b1'"""
         self._position = alg_coord
-
-    def remove_out_of_bounds(self, moves_list):
-        """
-        helper function takes a list of tuples of potential moves for
-        any child of the Piece instance.
-        Returns: a list without any moves that are off the game board
-        """
-        board = self._board.get_board()
-        num_rows = len(board)
-        num_cols = len(board[0])
-        valid_moves = []
-        for coord in moves_list:
-            row, col = coord  # unpack tuple
-            if 0 <= row < num_rows and 0 <= col < num_cols:  # if column is in [A...I] and row is in [0...9]
-                valid_moves.append(coord)                    # add to valid moves
-        return valid_moves
-
-    def remove_same_color(self, tup_list):
-        """
-        helper function takes a list of tuples of potential moves for
-        any child of the Piece instance.
-        Returns: a list without any moves that are occupied by a piece
-        of the same color as the current Piece instance (blocked)
-        """
-        valid_moves = []
-        board = self._board.get_board()
-        for coord in tup_list:
-            row_index, col_index = coord
-            piece_obj = board[row_index][col_index]
-            if piece_obj is None:
-                valid_moves.append(coord)           # valid if empty
-            elif piece_obj.get_color() != self.get_color():
-                valid_moves.append(coord)           # valid if opposite player color
-        return valid_moves
-
-    def on_game_board(self, tup_coord):
-        """
-        helper function takes a tuple coordinate and
-        returns true if it's on the game board, false otherwise
-        """
-        board = self._board.get_board()
-        row_len = len(board[0])
-        col_len = len(board)
-
-        row, col = tup_coord
-        if 0 <= col < row_len and 0 <= row < col_len:
-            return True
-        else:
-            return False
 
 
 class Chariot(Piece):
@@ -157,12 +112,11 @@ class Chariot(Piece):
             next_row = row_index + step                         # move row index either down or up
 
         orthogonal_moves = list()
-        board = self._board.get_board()
         valid_square = True
         while valid_square:
-            if self.on_game_board((next_row, next_column)):  # if next piece is on the board
+            if self._board.on_game_board((next_row, next_column)):  # if next piece is on the board
                 # get next piece
-                next_piece = board[next_row][next_column]
+                next_piece = self._board.get_contents_numeric((next_row, next_column))
                 if next_piece is None:                                      # if empty, valid move
                     orthogonal_moves.append((next_row, next_column))
                     if direction == "right" or direction == "left":         # move across board based on direction
@@ -205,7 +159,7 @@ class Chariot(Piece):
 
         # if chariot is in a fortress corner, and if the center is empty, can move two squares diagonally
         alg_center = numeric_to_algebraic(fort_center[0])
-        center_obj = self._board.get_square_contents(alg_center)
+        center_obj = self._board.get_contents_algebraic(alg_center)
         if chariot_pos in fort_corners and center_obj is None:
             potential_moves.append((row_index + 2, col_index + 2))  # diagonal 2 down/right
             potential_moves.append((row_index + 2, col_index - 2))  # diagonal 2 down/left
@@ -218,7 +172,7 @@ class Chariot(Piece):
             if coord in fortress:
                 fortress_moves.append(coord)    # only add moves that are in the fortress
 
-        return self.remove_same_color(fortress_moves)   # remove any squares that are friendly
+        return self._board.filter_moves_same_color(fortress_moves, self.get_color())   # remove any squares that are friendly
 
     def get_valid_moves(self):
         """
@@ -269,7 +223,7 @@ class Elephant(Piece):
         helper function returns a list of possible diagonal moves 2 squares away
         from the current position based on the direction given.
         verifies the moves aren't blocked, and that they are on the game board with
-        the use of on_game_board() and remove_out_of_bounds() helper functions.
+        the use of on_game_board() and filter_moves_out_of_bounds() helper functions.
         :param direction: either 'right', 'left', 'down', or 'up'
         :returns: diagonal_moves
         """
@@ -295,10 +249,10 @@ class Elephant(Piece):
             next_row = row_index + step  # move row index either down or up
 
         diagonal_moves = list()
-        if self.on_game_board((next_row, next_column)):  # if in bounds
+        if self._board.on_game_board((next_row, next_column)):  # if in bounds
             ortho_square = (next_row, next_column)
             ortho_square_alg = numeric_to_algebraic(ortho_square)
-            ortho_obj = self._board.get_square_contents(ortho_square_alg)
+            ortho_obj = self._board.get_contents_algebraic(ortho_square_alg)
             if ortho_obj is None:  # if orthogonal square is not blocked
                 # make two lists for possible diagonals 1 square away and
                 # 2 squares away (depending on direction)
@@ -311,14 +265,14 @@ class Elephant(Piece):
                     first_diagonals = [(next_row+1, next_column+step), (next_row-1, next_column+step)]
                     second_diagonals = [(next_row+2, next_column+step+step), (next_row-2, next_column+step+step)]
                 # iterate only through the first diagonals that are on the game board
-                for first_diag in self.remove_out_of_bounds(first_diagonals):
+                for first_diag in self._board.filter_moves_out_of_bounds(first_diagonals):
                     first_diag_alg = numeric_to_algebraic(first_diag)
-                    first_diag_obj = self._board.get_square_contents(first_diag_alg)
+                    first_diag_obj = self._board.get_contents_algebraic(first_diag_alg)
                     if first_diag_obj is None:  # if empty (clear)
                         # iterate through second diagonals that are on the board
-                        for second_diag in self.remove_out_of_bounds(second_diagonals):
+                        for second_diag in self._board.filter_moves_out_of_bounds(second_diagonals):
                             second_diag_alg = numeric_to_algebraic(second_diag)
-                            second_diag_obj = self._board.get_square_contents(second_diag_alg)
+                            second_diag_obj = self._board.get_contents_algebraic(second_diag_alg)
                             if second_diag_obj is None or second_diag_obj.get_color() != self.get_color():
                                 # if empty or enemy, add to valid moves
                                 diagonal_moves.append(second_diag)
@@ -364,7 +318,7 @@ class Horse(Piece):
         helper function returns a list of possible diagonal moves 1 square away
         based on the direction given.
         verifies the moves aren't blocked, and that they are on the game board with
-        the use of the on_game_board() and remove_out_of_bounds() helper functions.
+        the use of the on_game_board() and filter_moves_out_of_bounds() helper functions.
         :param direction: either 'right', 'left', 'down', or 'up'
         :returns: diagonal_moves
         """
@@ -390,10 +344,10 @@ class Horse(Piece):
             next_row = row_index + step  # move row index either down or up
 
         diagonal_moves = list()
-        if self.on_game_board((next_row, next_column)):  # if in bounds
+        if self._board.on_game_board((next_row, next_column)):  # if in bounds
             ortho_square = (next_row, next_column)
             ortho_square_alg = numeric_to_algebraic(ortho_square)
-            ortho_obj = self._board.get_square_contents(ortho_square_alg)
+            ortho_obj = self._board.get_contents_algebraic(ortho_square_alg)
             if ortho_obj is None:  # if orthogonal square is not blocked
                 # make list of 2 possible diagonals (depending on direction)
                 diagonals = None
@@ -402,9 +356,9 @@ class Horse(Piece):
                 if direction == "right" or direction == "left":
                     diagonals = [(next_row+1, next_column+step), (next_row-1, next_column+step)]
                 # iterate only through the diagonals that are on the game board
-                for diagonal in self.remove_out_of_bounds(diagonals):
+                for diagonal in self._board.filter_moves_out_of_bounds(diagonals):
                     diagonal_alg = numeric_to_algebraic(diagonal)
-                    diagonal_obj = self._board.get_square_contents(diagonal_alg)
+                    diagonal_obj = self._board.get_contents_algebraic(diagonal_alg)
                     if diagonal_obj is None or diagonal_obj.get_color() != self.get_color():  # if empty or enemy
                         diagonal_moves.append(diagonal)  # add coordinate to valid moves
         return diagonal_moves
@@ -445,7 +399,7 @@ class Guard(Piece):
     def get_valid_moves(self):
         """
         returns a list of valid moves for the Guard based on the current position,
-        uses helper functions remove_same_color for moves blocked by friendly pieces
+        uses helper functions filter_moves_same_color for moves blocked by friendly pieces
         """
         guard_pos = self.get_numeric_position()
         row_index, col_index = guard_pos
@@ -483,7 +437,7 @@ class Guard(Piece):
             if coord in fortress:
                 fortress_moves.append(coord)  # only add coordinates that are in the fortress
 
-        all_moves = self.remove_same_color(fortress_moves)  # remove any squares that are friendly
+        all_moves = self._board.filter_moves_same_color(fortress_moves, self.get_color())  # remove any squares that are friendly
 
         # add guard's current position (pass move) to valid moves
         all_moves.append(guard_pos)
@@ -509,7 +463,7 @@ class General(Piece):
     def get_valid_moves(self):
         """
         returns a list of valid moves for the General based on the current position,
-        uses helper functions remove_same_color for moves blocked by friendly pieces
+        uses helper functions filter_moves_same_color for moves blocked by friendly pieces
         and invert_coordinates from the game class for red vs blue Generals
         """
         gen_pos = self.get_numeric_position()
@@ -548,7 +502,7 @@ class General(Piece):
             if coord in fortress:
                 fortress_moves.append(coord)  # only add coordinates that are in the fortress
         # don't include any moves that have a piece with the same color as the current turn (blocked)
-        current_valid_moves = self.remove_same_color(fortress_moves)
+        current_valid_moves = self._board.filter_moves_same_color(fortress_moves, self.get_color())
 
         # add the general's current position (pass move) as a valid move
         current_valid_moves.append(gen_pos)
@@ -602,42 +556,41 @@ class Cannon(Piece):
             next_row = row_index + step                         # move row index either down or up
 
         orthogonal_moves = list()
-        board = self._board.get_board()
 
         # get next piece if it's on the board, until off the board
         # or a different piece is found...
-        if self.on_game_board((next_row, next_column)):
-            next_piece = board[next_row][next_column]
+        if self._board.on_game_board((next_row, next_column)):
+            next_piece = self._board.get_contents_numeric((next_row, next_column))
             # while next square is empty and on game board, keep moving along straight line
-            while next_piece is None and self.on_game_board((next_row, next_column)):
+            while next_piece is None and self._board.on_game_board((next_row, next_column)):
                 if direction == "right" or direction == "left":  # move across board based on direction
                     next_column += step
                 elif direction == "down" or direction == "up":
                     next_row += step
-                if self.on_game_board((next_row, next_column)):
-                    next_piece = board[next_row][next_column]
+                if self._board.on_game_board((next_row, next_column)):
+                    next_piece = self._board.get_contents_numeric((next_row, next_column))
             # a piece has been found, or we're off the board
-            if self.on_game_board((next_row, next_column)):     # if still on game board...
+            if self._board.on_game_board((next_row, next_column)):     # if still on game board...
                 # if not a cannon, can jump over!
                 if next_piece is not None and "Cn" not in next_piece.get_name():
                     if direction == "right" or direction == "left":  # move across board based on direction
                         next_column += step
                     elif direction == "down" or direction == "up":
                         next_row += step
-                    if self.on_game_board((next_row, next_column)):
-                        next_piece = board[next_row][next_column]
+                    if self._board.on_game_board((next_row, next_column)):
+                        next_piece = self._board.get_contents_numeric((next_row, next_column))
                         # while each next square is empty and on the board,
                         # keep moving along straight line AND ADD VALID MOVES
-                        while next_piece is None and self.on_game_board((next_row, next_column)):
+                        while next_piece is None and self._board.on_game_board((next_row, next_column)):
                             orthogonal_moves.append((next_row, next_column))
                             if direction == "right" or direction == "left":  # move across board based on direction
                                 next_column += step
                             elif direction == "down" or direction == "up":
                                 next_row += step
-                            if self.on_game_board((next_row, next_column)):
-                                next_piece = board[next_row][next_column]
+                            if self._board.on_game_board((next_row, next_column)):
+                                next_piece = self._board.get_contents_numeric((next_row, next_column))
                         # a piece has been found, or we're off the board
-                        if self.on_game_board((next_row, next_column)):     # if still on game board...
+                        if self._board.on_game_board((next_row, next_column)):     # if still on game board...
                             # if not a cannon and if an enemy piece, add to valid moves, end loop
                             if next_piece is not None:
                                 if "Cn" not in next_piece.get_name() and next_piece.get_color() != self.get_color():
@@ -663,7 +616,7 @@ class Cannon(Piece):
 
         # get the object in the fortress center (either a Piece or None)
         fort_center_alg = numeric_to_algebraic(fort_center[0])
-        fort_center_obj = self._board.get_square_contents(fort_center_alg)
+        fort_center_obj = self._board.get_contents_algebraic(fort_center_alg)
 
         potential_moves = list()
         # if cannon is in a corner, and the center is not empty and not a cannon,
@@ -686,7 +639,7 @@ class Cannon(Piece):
         for square in fortress_moves:
             # get object found at each square (either Piece or None)
             square_alg = numeric_to_algebraic(square)
-            square_obj = self._board.get_square_contents(square_alg)
+            square_obj = self._board.get_contents_algebraic(square_alg)
             # if empty, valid move
             if square_obj is None:
                 valid_fortress_moves.append(square)
@@ -732,7 +685,7 @@ class Soldier(Piece):
     def get_valid_moves(self):
         """
         returns a list of valid moves for the Soldier based on the current position,
-        uses helper functions remove_out_of_bounds, remove_same_color for moves blocked
+        uses helper functions filter_moves_out_of_bounds, filter_moves_same_color for moves blocked
         by friendly pieces, and invert_coordinates from the game class for red vs blue Soldiers
         """
         sold_pos = self.get_numeric_position()
@@ -771,12 +724,11 @@ class Soldier(Piece):
                 sold_moves.append(corner)
 
         # don't include any moves that are off the board
-        in_bounds_moves = self.remove_out_of_bounds(sold_moves)
+        in_bounds_moves = self._board.filter_moves_out_of_bounds(sold_moves)
         # don't include any moves that have a piece with the same color as the current turn (blocked)
-        all_valid_moves = self.remove_same_color(in_bounds_moves)
+        all_valid_moves = self._board.filter_moves_same_color(in_bounds_moves, self.get_color())
 
         # add soldier's current position (pass move) to valid moves
         all_valid_moves.append(sold_pos)
 
         return all_valid_moves
-

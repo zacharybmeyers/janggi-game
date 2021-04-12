@@ -13,18 +13,18 @@ class TestSoldier(unittest.TestCase):
         game.make_move("a7", "b7")                     # move a7 to b7
         game.set_turn("b")                             # reset turn
         b7_valid_moves = [(5, 1), (6, 0), (6, 1)]
-        b7_b_sold = game.get_board().get_square_contents("b7")     # get piece object
+        b7_b_sold = game.get_board().get_contents_algebraic("b7")     # get piece object
         self.assertEqual(b7_valid_moves, b7_b_sold.get_valid_moves())
 
     def test_soldier_stays_on_board(self):
         game = Game()
         # blue soldier at A7 can't move off board
-        a7_b_sold = game.get_board().get_square_contents("a7")
+        a7_b_sold = game.get_board().get_contents_algebraic("a7")
         blue_moves = [(5, 0), (6, 1), (6, 0)]
         self.assertCountEqual(blue_moves, a7_b_sold.get_valid_moves())
 
         # red soldier at A4 can't move off board
-        a4_r_sold = game.get_board().get_square_contents("a4")
+        a4_r_sold = game.get_board().get_contents_algebraic("a4")
         red_moves = [(4, 0), (3, 1), (3, 0)]
         self.assertEqual(red_moves, a4_r_sold.get_valid_moves())
 
@@ -53,7 +53,7 @@ class TestSoldier(unittest.TestCase):
         game.make_move("a7", "a6")     # bSd to A6
         game.make_move("a4", "a5")     # rSd to A5
         game.make_move("a6", "a5")     # bSd capture A5
-        a5_sd = game.get_board().get_square_contents("a5")
+        a5_sd = game.get_board().get_contents_algebraic("a5")
         self.assertEqual("b", a5_sd.get_color())
 
 
@@ -129,7 +129,7 @@ class TestChariot(unittest.TestCase):
         game.get_board().set_square_contents("d3", b_char)     # move it to d3 (fortress corner)
         b_char.set_position("d3")
 
-        red_gen = game.get_board().get_square_contents("e2")   # get rGn
+        red_gen = game.get_board().get_contents_algebraic("e2")   # get rGn
         game.get_board().set_square_contents("e2", None)       # clear rGn at e2
         game.get_board().set_square_contents("f2", red_gen)    # move to f2
         red_gen.set_position("f2")
@@ -142,7 +142,7 @@ class TestChariot(unittest.TestCase):
         game.get_board().set_square_contents("d3", b_char)  # move it to d3 (fortress corner)
         b_char.set_position("d3")
 
-        red_gen = game.get_board().get_square_contents("e2")  # get rGn
+        red_gen = game.get_board().get_contents_algebraic("e2")  # get rGn
         game.get_board().set_square_contents("e2", None)  # clear rGn at e2
         game.get_board().set_square_contents("f2", red_gen)  # move to f2
         red_gen.set_position("f2")
@@ -188,8 +188,3 @@ class TestCannon(unittest.TestCase):
         game.make_move("b7", "a7")
         self.assertTrue(game.make_move("b3", "e3"))    # make sure cannon can jump over same color
         game.get_board().display_board()
-
-
-if __name__ == '__main__':
-    unittest.main()
-
