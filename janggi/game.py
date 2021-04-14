@@ -4,7 +4,7 @@ import random
 import logging
 
 from janggi.board import Board
-from janggi.utils import algebraic_to_numeric, numeric_to_algebraic
+from janggi.utils import algebraic_to_numeric, numeric_to_algebraic, swap_color
 
 
 class Game:
@@ -40,15 +40,12 @@ class Game:
         """setter for turn"""
         self._turn = color
 
-    def swap_color(self, color):
-        return 'b' == color and 'r' or 'b'
-
     def get_next_turn(self):
-        return self.swap_color(self._turn)
+        return swap_color(self._turn)
 
     def update_turn(self):
         """helper function updates the turn from 'r' to 'b' with the use of swap_color"""
-        self.set_turn(self.swap_color(self._turn))
+        self.set_turn(swap_color(self._turn))
 
     def get_board(self):
         return self._board

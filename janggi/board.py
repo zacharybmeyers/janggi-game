@@ -20,7 +20,7 @@
 #               has a get_valid_moves() method that is specific to that Piece's move set.
 
 from janggi.piece import *
-from janggi.utils import algebraic_to_numeric, numeric_to_algebraic
+from janggi.utils import algebraic_to_numeric, numeric_to_algebraic, swap_color
 
 
 class Board:
@@ -229,7 +229,7 @@ class Board:
         Otherwise, return False.
         """
         # initialize enemy color
-        enemy_color = self.swap_color(color)
+        enemy_color = swap_color(color)
 
         # get all the enemy's valid moves
         enemy_valid_moves = []

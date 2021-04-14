@@ -51,3 +51,7 @@ def invert_coordinates(tup_list):
         inverted_list.append(inverted_coord)  # add inverted coord
     tup_list.clear()
     tup_list.extend(inverted_list)
+
+
+def swap_color(color):
+    return 'b' == color and 'r' or 'b'
