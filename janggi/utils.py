@@ -1,5 +1,3 @@
-
-
 def algebraic_to_numeric(alg_coord: str) -> (int, int):
     """
     helper function converts an algebraic coordinate to a numeric coordinate
