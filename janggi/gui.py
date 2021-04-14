@@ -20,14 +20,11 @@
 #               The game window is not resizeable.
 
 import argparse
-import cProfile
 import logging
 import os
+import pygame
 import random
 import time
-
-os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
-import pygame
 
 from janggi.game import Game
 
@@ -181,7 +178,7 @@ def blit_ending_message(game, screen):
     # create image for ending message, blit to screen
     font = pygame.font.SysFont("timesnewroman", 30)
     win_str = f"CHECKMATE, {color.upper()} WINS!"
-    win_img = font.render(win_str, True, color)
+    win_img = font.render(win_str, True, pygame.Color(color))
     rect = win_img.get_rect()
     rect.center = cx, cy
     screen.blit(win_img, rect.topleft)
@@ -405,6 +402,5 @@ if __name__ == "__main__":
             level=logging.INFO - (10 * args.debug),
             )
 
-    #cProfile.run('main()', 'stats')
     main(ai_levels[args.ai])
 
