@@ -1,3 +1,5 @@
+[![Lint and Test](https://github.com/zacharybmeyers/janggi-game/actions/workflows/lint-and-test.yml/badge.svg)](https://github.com/zacharybmeyers/janggi-game/actions/workflows/lint-and-test.yml)
+
 # Janggi-Game
 
 **A playable GUI for games of [Janggi](https://en.wikipedia.org/wiki/Janggi) (Korean chess)**
