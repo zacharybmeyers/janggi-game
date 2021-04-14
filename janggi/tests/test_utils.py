@@ -19,4 +19,3 @@ class TestBoard(unittest.TestCase):
         self.assertEqual("a1", numeric_to_algebraic(num1))
         self.assertEqual("e5", numeric_to_algebraic(num2))
         self.assertEqual("d10", numeric_to_algebraic(num3))
-

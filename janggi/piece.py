@@ -172,7 +172,8 @@ class Chariot(Piece):
             if coord in fortress:
                 fortress_moves.append(coord)    # only add moves that are in the fortress
 
-        return self._board.filter_moves_same_color(fortress_moves, self.get_color())   # remove any squares that are friendly
+        # remove any squares that are friendly
+        return self._board.filter_moves_same_color(fortress_moves, self.get_color())
 
     def get_valid_moves(self):
         """
@@ -437,7 +438,8 @@ class Guard(Piece):
             if coord in fortress:
                 fortress_moves.append(coord)  # only add coordinates that are in the fortress
 
-        all_moves = self._board.filter_moves_same_color(fortress_moves, self.get_color())  # remove any squares that are friendly
+        # remove any squares that are friendly
+        all_moves = self._board.filter_moves_same_color(fortress_moves, self.get_color())
 
         # add guard's current position (pass move) to valid moves
         all_moves.append(guard_pos)

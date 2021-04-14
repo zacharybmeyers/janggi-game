@@ -34,7 +34,7 @@ class Game:
         return self._turn
 
     def get_turn_long(self):
-        return { 'b': 'blue', 'r': 'red' }[self._turn]
+        return {'b': 'blue', 'r': 'red'}[self._turn]
 
     def set_turn(self, color):
         """setter for turn"""
@@ -119,7 +119,7 @@ class Game:
             else:
                 invalid_moves.add((start_num, end_num))
 
-        return (start, end)
+        return start, end
 
     def hypothetical_move(self, start, end):
         """

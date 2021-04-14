@@ -29,14 +29,14 @@ import time
 from janggi.game import Game
 
 AI_NAMES = [
-    'Gye Bon-Hwa', # (Glorious One)',
-    'Tak Hyun-Jung', # (Wise and Righteous)',
-    'Nae Chun-Hei', # (Justice and Grace)',
-    'Jo Chunghee', # (One Who is Righteous and Dutiful)',
-    'Cheon Mee', # (Beauty)',
-    'Yong Dong-Min', # (East and Cleverness)',
-    'Go Dae', # (The Great One)',
-    'Dongbang In Ho', # (Humanity and Goodness)',
+    'Gye Bon-Hwa',  # (Glorious One)',
+    'Tak Hyun-Jung',  # (Wise and Righteous)',
+    'Nae Chun-Hei',  # (Justice and Grace)',
+    'Jo Chunghee',  # (One Who is Righteous and Dutiful)',
+    'Cheon Mee',  # (Beauty)',
+    'Yong Dong-Min',  # (East and Cleverness)',
+    'Go Dae',  # (The Great One)',
+    'Dongbang In Ho',  # (Humanity and Goodness)',
 ]
 
 
@@ -193,9 +193,12 @@ def blit_message(screen, msg):
     # refresh display
     pygame.display.flip()
 
+
 ai_blue = None
 ai_red = None
-def blit_ai_move(screen, start, end, level, color):
+
+
+def blit_ai_move(screen, start, end, color):
     global ai_blue
     global ai_red
 
@@ -211,8 +214,10 @@ def blit_ai_move(screen, start, end, level, color):
 
     blit_message(screen, f"{name} Moved: {start} -> {end}")
 
+
 def blit_invalid_move(screen):
     blit_message(screen, "Invalid move, try again!")
+
 
 def blit_in_check(screen, color):
     if 'b' == color:
@@ -220,6 +225,7 @@ def blit_in_check(screen, color):
     elif 'r' == color:
         color = 'Red'
     blit_message(screen, f"{color} is in check!")
+
 
 def perform_set_of_moves(game):
     game.make_move('e7', 'e6')
@@ -297,16 +303,15 @@ def main(ai_level):
     # blit each one to the screen for now to debug
     board_rectangles = get_board_rectangles()
     # FOR DEBUGGING: prints all board rectangles for visualization
-    #for alg_coord, my_rect in board_rectangles.items():
+    # for alg_coord, my_rect in board_rectangles.items():
     #    pygame.draw.rect(screen, "blue", my_rect)
-    #pygame.display.flip()
+    # pygame.display.flip()
 
     # initialize boolean to control main loop
     running = True
-    # initialize start and end for click detection, valid_move
+    # initialize start and end for click detection
     start = None
     end = None
-    valid_move = None
 
     # main loop
     while running:
@@ -318,7 +323,7 @@ def main(ai_level):
                 time.sleep(t)
                 (ai_start, ai_end) = game.make_ai_move(ai_level)
                 blit_current_board(game, screen)
-                blit_ai_move(screen, ai_start, ai_end, ai_level, game.get_turn())
+                blit_ai_move(screen, ai_start, ai_end, game.get_turn())
                 if game.is_in_check(game.get_turn()):
                     blit_in_check(screen, game.get_turn_long())
 
@@ -394,4 +399,3 @@ if __name__ == "__main__":
             )
 
     main(ai_levels[args.ai])
-

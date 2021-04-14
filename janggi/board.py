@@ -58,7 +58,7 @@ class Board:
     def _init_piece_positions(self):
         """helper function gives an algebraic position to every Piece on the board"""
         # set starting positions for game pieces
-        for (row_index,col_index,piece_obj) in self.indexed_piece_objects():
+        for (row_index, col_index, piece_obj) in self.indexed_piece_objects():
             num_coord = (row_index, col_index)                  # create coordinate
             alg_coord = numeric_to_algebraic(num_coord)    # convert to algebraic
             piece_obj.set_position(alg_coord)                   # set the position
@@ -70,13 +70,13 @@ class Board:
         generator yields all the piece objects from the game board along
         with associated row/column indexes
         """
-        for ridx,row in enumerate(self._grid):
-            for cidx,piece_obj in enumerate(row):
+        for r_index, row in enumerate(self._grid):
+            for c_index, piece_obj in enumerate(row):
                 if piece_obj is not None:
-                    yield (ridx,cidx,piece_obj)
+                    yield r_index, c_index, piece_obj
 
     def all_pieces(self):
-        for (ridx,cidx,piece) in self.indexed_piece_objects():
+        for (row, col, piece) in self.indexed_piece_objects():
             yield piece
 
     def pieces_by_color(self, color):
@@ -133,7 +133,7 @@ class Board:
         :param tup_coord: row,col tuple
         :return: the object in the square (or None)
         """
-        row,col = tup_coord
+        row, col = tup_coord
         return self._grid[row][col]
 
     def get_contents_algebraic(self, alg_coord):
@@ -248,7 +248,6 @@ class Board:
             return True
         else:
             return False
-
 
 
 def list_format(a_list):
