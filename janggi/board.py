@@ -228,13 +228,8 @@ class Board:
         they are in check, return True.
         Otherwise, return False.
         """
-        # initialize colors
-        if color == "blue":
-            friendly_color = "b"
-            enemy_color = "r"
-        else:
-            friendly_color = "r"
-            enemy_color = "b"
+        # initialize enemy color
+        enemy_color = self.swap_color(color)
 
         # get all the enemy's valid moves
         enemy_valid_moves = []
@@ -242,7 +237,7 @@ class Board:
             enemy_valid_moves.extend(move_list)
 
         # get the friendly general
-        general_obj = self.get_general(friendly_color)
+        general_obj = self.get_general(color)
         # get the general's position
         general_pos = general_obj.get_numeric_position()
 
