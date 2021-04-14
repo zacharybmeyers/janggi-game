@@ -7,7 +7,7 @@ from janggi.utils import numeric_to_algebraic, algebraic_to_numeric, invert_coor
 
 class Piece:
     """Represents a Piece for use in the Game class"""
-    def __init__(self, board, color, worth, name, image):
+    def __init__(self, board, color: str, worth: int, name: str, image: pygame.Surface):
         """
         initializes game, color, and position
         @type board: janggi.board.Board

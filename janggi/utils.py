@@ -1,6 +1,6 @@
 
 
-def algebraic_to_numeric(alg_coord):
+def algebraic_to_numeric(alg_coord: str) -> (int, int):
     """
     helper function converts an algebraic coordinate to a numeric coordinate
     :param alg_coord: in string format ie 'b1'
@@ -18,7 +18,7 @@ def algebraic_to_numeric(alg_coord):
     return row_index, col_index
 
 
-def numeric_to_algebraic(num_coord):
+def numeric_to_algebraic(num_coord: (int, int)) -> str:
     """
     helper function converts a numeric coordinate to an algebraic coordinate
     :param num_coord: in tuple format ie (1, 2)
@@ -38,7 +38,7 @@ def numeric_to_algebraic(num_coord):
     return alg_str
 
 
-def invert_coordinates(tup_list):
+def invert_coordinates(tup_list: list[(int, int)]) -> None:
     """
     helper function inverts a list of coordinates (tuples) across the Janggi board.
     Returns: None
@@ -53,5 +53,5 @@ def invert_coordinates(tup_list):
     tup_list.extend(inverted_list)
 
 
-def swap_color(color):
+def swap_color(color: str) -> str:
     return 'b' == color and 'r' or 'b'
