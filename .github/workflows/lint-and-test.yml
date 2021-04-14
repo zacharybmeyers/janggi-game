@@ -7,10 +7,10 @@ on:
     branches: [ $default-branch ]
     
   pull_request:
-    branches: [ $default-branch ]
+    types: [ opened, synchronize, reopened ]
 
 jobs:
-  build:
+  lint-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -38,3 +38,9 @@ jobs:
       run: |
         coverage run -m unittest discover -v -s janggi/
         
+    - name: Archive Coverage Report
+      uses: actions/upload-artifact@v2
+      with:
+        name: code-coverage-report
+        path: htmlcov/
+
