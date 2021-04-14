@@ -331,7 +331,7 @@ def main(ai_level):
                 (ai_start, ai_end) = game.make_ai_move(ai_level)
                 blit_current_board(game, screen)
                 blit_ai_move(screen, ai_start, ai_end, ai_level, game.get_turn())
-                if game.is_in_check(game.get_turn_long()):
+                if game.is_in_check(game.get_turn()):
                     blit_in_check(screen, game.get_turn_long())
 
         for event in pygame.event.get():
@@ -375,7 +375,7 @@ def main(ai_level):
                 if not valid_move:
                     # display invalid move prompt
                     blit_invalid_move(screen)
-                if game.is_in_check(game.get_turn_long()):
+                if game.is_in_check(game.get_turn()):
                     blit_in_check(screen, game.get_turn_long())
                 # reset start and end for next turn, continue loop
                 start = None
