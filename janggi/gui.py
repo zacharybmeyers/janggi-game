@@ -3,9 +3,9 @@
 # Author:       Zachary Meyers
 # Date:         2021-03-23
 # Description:  This module creates a simple GUI with pygame for playing a game of Janggi,
-#               and makes use of the logic from the JanggiGame module.
+#               and makes use of the logic from the Game module.
 #               All images used in the assets directory are public domain.
-#               Each child instance of the Piece class in JanggiGame has a data member
+#               Each child instance of the Piece class in Game has a data member
 #               pointing to a corresponding piece image in assets.
 #               There are various helper functions that...:
 #                   --determine where to blit game pieces
@@ -20,26 +20,23 @@
 #               The game window is not resizeable.
 
 import argparse
-import cProfile
 import logging
 import os
+import pygame
 import random
 import time
 
-os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
-import pygame
-
-from janggi.gameboard import JanggiGame
+from janggi.game import Game
 
 AI_NAMES = [
-    'Gye Bon-Hwa', # (Glorious One)',
-    'Tak Hyun-Jung', # (Wise and Righteous)',
-    'Nae Chun-Hei', # (Justice and Grace)',
-    'Jo Chunghee', # (One Who is Righteous and Dutiful)',
-    'Cheon Mee', # (Beauty)',
-    'Yong Dong-Min', # (East and Cleverness)',
-    'Go Dae', # (The Great One)',
-    'Dongbang In Ho', # (Humanity and Goodness)',
+    'Gye Bon-Hwa',  # (Glorious One)',
+    'Tak Hyun-Jung',  # (Wise and Righteous)',
+    'Nae Chun-Hei',  # (Justice and Grace)',
+    'Jo Chunghee',  # (One Who is Righteous and Dutiful)',
+    'Cheon Mee',  # (Beauty)',
+    'Yong Dong-Min',  # (East and Cleverness)',
+    'Go Dae',  # (The Great One)',
+    'Dongbang In Ho',  # (Humanity and Goodness)',
 ]
 
 
@@ -79,25 +76,37 @@ def get_board_rectangles():
     return board_rectangles
 
 
-def get_string_images(list_of_strings):
+def get_string_images(list_of_strings: list[str]) -> list[pygame.Surface]:
     """
     helper functions takes a list of strings and returns a
-    dictionary with key = letter,
-    val = pygame Surface object
+    list of pygame Surface objects
     """
-    image_dict = dict()
+    image_list = list()
     pygame.init()
     font = pygame.font.SysFont("timesnewroman", 30)
     for a_string in list_of_strings:
         black = (0, 0, 0)
         img = font.render(a_string.upper(), True, black)
-        image_dict[a_string] = img
-    return image_dict
+        image_list.append(img)
+    return image_list
+
+
+def blit_images(screen, images: list[pygame.Surface], coord_x: int, coord_y: int, stride_x=0, stride_y=0):
+    """
+    Helper function takes a list of images and prints them starting at the given coordinates and using the given
+    stride to space out each image.
+    """
+    for img in images:
+        rect = img.get_rect()
+        rect.center = (coord_x, coord_y)
+        screen.blit(img, rect.topleft)
+        coord_x += stride_x
+        coord_y += stride_y
 
 
 def blit_current_board(game, screen):
     """
-    helper function takes a current instance of the JanggiGame class,
+    helper function takes a current instance of the Game class,
     iterates through the pieces and blits each one to the current pygame screen
     """
     # fill background with orange color
@@ -109,41 +118,19 @@ def blit_current_board(game, screen):
     # blit each column header here
     letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
     letter_images = get_string_images(letters)
-    x_coord = 33 + 45
-    y_coord = 25
-    for img in letter_images.values():
-        rect = img.get_rect()
-        rect.center = (x_coord, y_coord)
-        screen.blit(img, rect.topleft)
-        x_coord += 66
+    blit_images(screen, letter_images, 33+45, 25, stride_x=66)
 
+    numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+    number_images = get_string_images(numbers)
     # blit each row number along left side here
-    numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
-    number_images = get_string_images(numbers)
-    x_coord = 25
-    y_coord = 33 + 45
-    for img in number_images.values():
-        rect = img.get_rect()
-        rect.center = (x_coord, y_coord)
-        screen.blit(img, rect.topleft)
-        y_coord += 66
-
+    blit_images(screen, number_images, 25, 33+45, stride_y=66)
     # blit each row number along right side here
-    numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
-    number_images = get_string_images(numbers)
-    x_coord = 684 - 25
-    y_coord = 33 + 45
-    for img in number_images.values():
-        rect = img.get_rect()
-        rect.center = (x_coord, y_coord)
-        screen.blit(img, rect.topleft)
-        y_coord += 66
+    blit_images(screen, number_images, 684-25, 33+45, stride_y=66)
 
     # blit each game piece image here!!!!
     pixel_dict = get_pixel_coordinates()
-    board = game.get_board()
 
-    for piece_obj in game.all_pieces():
+    for piece_obj in game.get_board().all_pieces():
         # get the piece's position, image and associated rectangle
         pos = piece_obj.get_position()
         image = piece_obj.get_image()
@@ -163,7 +150,7 @@ def blit_current_board(game, screen):
 
 def blit_ending_message(game, screen):
     """
-    helper function takes the current instance of the JanggiGame class
+    helper function takes the current instance of the Game class
     and the current pygame screen, then blits a rectangle declaring
     the winner to the center of the screen
     """
@@ -182,7 +169,7 @@ def blit_ending_message(game, screen):
     # create image for ending message, blit to screen
     font = pygame.font.SysFont("timesnewroman", 30)
     win_str = f"CHECKMATE, {color.upper()} WINS!"
-    win_img = font.render(win_str, True, color)
+    win_img = font.render(win_str, True, pygame.Color(color))
     rect = win_img.get_rect()
     rect.center = cx, cy
     screen.blit(win_img, rect.topleft)
@@ -206,9 +193,12 @@ def blit_message(screen, msg):
     # refresh display
     pygame.display.flip()
 
+
 ai_blue = None
 ai_red = None
-def blit_ai_move(screen, start, end, level, color):
+
+
+def blit_ai_move(screen, start, end, color):
     global ai_blue
     global ai_red
 
@@ -224,8 +214,10 @@ def blit_ai_move(screen, start, end, level, color):
 
     blit_message(screen, f"{name} Moved: {start} -> {end}")
 
+
 def blit_invalid_move(screen):
     blit_message(screen, "Invalid move, try again!")
+
 
 def blit_in_check(screen, color):
     if 'b' == color:
@@ -233,6 +225,7 @@ def blit_in_check(screen, color):
     elif 'r' == color:
         color = 'Red'
     blit_message(screen, f"{color} is in check!")
+
 
 def perform_set_of_moves(game):
     game.make_move('e7', 'e6')
@@ -291,7 +284,7 @@ def perform_set_of_moves(game):
 def main(ai_level):
 
     # create a Janggi Game instance
-    game = JanggiGame()
+    game = Game()
 
     # if desired, perform a predetermined set of moves here
     # perform_set_of_moves(game)
@@ -310,16 +303,15 @@ def main(ai_level):
     # blit each one to the screen for now to debug
     board_rectangles = get_board_rectangles()
     # FOR DEBUGGING: prints all board rectangles for visualization
-    #for alg_coord, my_rect in board_rectangles.items():
+    # for alg_coord, my_rect in board_rectangles.items():
     #    pygame.draw.rect(screen, "blue", my_rect)
-    #pygame.display.flip()
+    # pygame.display.flip()
 
     # initialize boolean to control main loop
     running = True
-    # initialize start and end for click detection, valid_move
+    # initialize start and end for click detection
     start = None
     end = None
-    valid_move = None
 
     # main loop
     while running:
@@ -331,7 +323,7 @@ def main(ai_level):
                 time.sleep(t)
                 (ai_start, ai_end) = game.make_ai_move(ai_level)
                 blit_current_board(game, screen)
-                blit_ai_move(screen, ai_start, ai_end, ai_level, game.get_turn())
+                blit_ai_move(screen, ai_start, ai_end, game.get_turn())
                 if game.is_in_check(game.get_turn()):
                     blit_in_check(screen, game.get_turn_long())
 
@@ -345,7 +337,7 @@ def main(ai_level):
                     for alg_coord, my_rect in board_rectangles.items():
                         if my_rect.collidepoint(event.pos):
                             if start is None and end is None:   # if first collision, set start
-                                p = game.get_square_contents(alg_coord)
+                                p = game.get_board().get_contents_algebraic(alg_coord)
                                 if p is None:
                                     break  # Ignore starting clicks on empty positions
                                 if p.get_color() != game.get_turn():
@@ -406,6 +398,4 @@ if __name__ == "__main__":
             level=logging.INFO - (10 * args.debug),
             )
 
-    #cProfile.run('main()', 'stats')
     main(ai_levels[args.ai])
-
