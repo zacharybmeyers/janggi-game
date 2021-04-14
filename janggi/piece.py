@@ -224,7 +224,7 @@ class Elephant(Piece):
         helper function returns a list of possible diagonal moves 2 squares away
         from the current position based on the direction given.
         verifies the moves aren't blocked, and that they are on the game board with
-        the use of on_game_board() and filter_moves_out_of_bounds() helper functions.
+        the use of on_game_board() helper function.
         :param direction: either 'right', 'left', 'down', or 'up'
         :returns: diagonal_moves
         """
@@ -255,30 +255,61 @@ class Elephant(Piece):
             ortho_square_alg = numeric_to_algebraic(ortho_square)
             ortho_obj = self._board.get_contents_algebraic(ortho_square_alg)
             if ortho_obj is None:  # if orthogonal square is not blocked
-                # make two lists for possible diagonals 1 square away and
-                # 2 squares away (depending on direction)
-                first_diagonals = None
-                second_diagonals = None
                 if direction == "up" or direction == "down":
-                    first_diagonals = [(next_row+step, next_column+1), (next_row+step, next_column-1)]
-                    second_diagonals = [(next_row+step+step, next_column+2), (next_row+step+step, next_column-2)]
+                    # try each path...
+                    # LEFT
+                    # get first diagonal, validate that it's on the board
+                    left_diag1 = (next_row+step, next_column-1)
+                    if self._board.on_game_board(left_diag1):
+                        left_diag1_obj = self._board.get_contents_numeric(left_diag1)
+                        # if first diagonal is empty, find second diagonal
+                        if left_diag1_obj is None:
+                            left_diag2 = (next_row + step + step, next_column - 2)
+                            if self._board.on_game_board(left_diag2):
+                                left_diag2_obj = self._board.get_contents_numeric(left_diag2)
+                                # if second diagonal is empty or an enemy, valid move
+                                if left_diag2_obj is None or left_diag2_obj.get_color() != self.get_color():
+                                    diagonal_moves.append(left_diag2)
+                    # RIGHT
+                    # get second diagonal, validate that it's on the board
+                    right_diag1 = (next_row+step, next_column+1)
+                    if self._board.on_game_board(right_diag1):
+                        right_diag1_obj = self._board.get_contents_numeric(right_diag1)
+                        if right_diag1_obj is None:
+                            right_diag2 = (next_row + step + step, next_column + 2)
+                            if self._board.on_game_board(right_diag2):
+                                right_diag2_obj = self._board.get_contents_numeric(right_diag2)
+                                if right_diag2_obj is None or right_diag2_obj.get_color() != self.get_color():
+                                    diagonal_moves.append(right_diag2)
+
                 if direction == "right" or direction == "left":
-                    first_diagonals = [(next_row+1, next_column+step), (next_row-1, next_column+step)]
-                    second_diagonals = [(next_row+2, next_column+step+step), (next_row-2, next_column+step+step)]
-                # iterate only through the first diagonals that are on the game board
-                for first_diag in self._board.filter_moves_out_of_bounds(first_diagonals):
-                    first_diag_alg = numeric_to_algebraic(first_diag)
-                    first_diag_obj = self._board.get_contents_algebraic(first_diag_alg)
-                    if first_diag_obj is None:  # if empty (clear)
-                        # iterate through second diagonals that are on the board
-                        for second_diag in self._board.filter_moves_out_of_bounds(second_diagonals):
-                            second_diag_alg = numeric_to_algebraic(second_diag)
-                            second_diag_obj = self._board.get_contents_algebraic(second_diag_alg)
-                            if second_diag_obj is None or second_diag_obj.get_color() != self.get_color():
-                                # if empty or enemy, add to valid moves
-                                diagonal_moves.append(second_diag)
-        # the nested call above will add duplicate valid moves to the list, remove these before returning
-        return list(set(diagonal_moves))
+                    # try each path...
+                    # LEFT
+                    # get first diagonal, validate that it's on the board
+                    left_diag1 = (next_row-1, next_column+step)
+                    if self._board.on_game_board(left_diag1):
+                        left_diag1_obj = self._board.get_contents_numeric(left_diag1)
+                        # if first diagonal is empty, find second diagonal
+                        if left_diag1_obj is None:
+                            left_diag2 = (next_row-2, next_column+step+step)
+                            if self._board.on_game_board(left_diag2):
+                                left_diag2_obj = self._board.get_contents_numeric(left_diag2)
+                                # if second diagonal is empty or an enemy, valid move
+                                if left_diag2_obj is None or left_diag2_obj.get_color() != self.get_color():
+                                    diagonal_moves.append(left_diag2)
+                    # RIGHT
+                    # get second diagonal, validate that it's on the board
+                    right_diag1 = (next_row+1, next_column+step)
+                    if self._board.on_game_board(right_diag1):
+                        right_diag1_obj = self._board.get_contents_numeric(right_diag1)
+                        if right_diag1_obj is None:
+                            right_diag2 = (next_row+2, next_column+step+step)
+                            if self._board.on_game_board(right_diag2):
+                                right_diag2_obj = self._board.get_contents_numeric(right_diag2)
+                                if right_diag2_obj is None or right_diag2_obj.get_color() != self.get_color():
+                                    diagonal_moves.append(right_diag2)
+
+        return diagonal_moves
 
     def get_valid_moves(self):
         """
