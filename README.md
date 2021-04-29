@@ -4,7 +4,7 @@
 
 **A playable GUI for games of [Janggi](https://en.wikipedia.org/wiki/Janggi) (Korean chess)**
 
-Running ``JanggiGUI.py`` imports the game logic from ``JanggiGame.py`` and displays a simple GUI using Pygame.
+Running ``gui.sh`` imports the game logic from modules within ``janggi/`` and displays a simple GUI implemented with Pygame.
 
 Demonstration:
 
